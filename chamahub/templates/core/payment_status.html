@@ -1,0 +1,229 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Payment Status - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-credit-card"></i> Payment Status
+            <small class="text-muted">Track your payment history and status</small>
+        </h2>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                <h5 class="card-title">Pending Payments</h5>
+                <h3 class="text-warning">{{ total_pending }}</h3>
+                <small class="text-muted">Awaiting confirmation</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h5 class="card-title">Confirmed Payments</h5>
+                <h3 class="text-success">{{ confirmed_contributions.count|add:confirmed_repayments.count }}</h3>
+                <small class="text-muted">Successfully processed</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                <h5 class="card-title">Failed Payments</h5>
+                <h3 class="text-danger">{{ failed_contributions.count|add:failed_repayments.count }}</h3>
+                <small class="text-muted">Require attention</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Payments Alert -->
+{% if total_pending > 0 %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>You have {{ total_pending }} pending payment(s).</strong>
+    <p class="mb-0">
+        If you've completed the M-Pesa payment but the status hasn't updated, 
+        {% if user.is_superuser %}
+        <a href="{% url 'confirm_payments' %}" class="btn btn-sm btn-warning">Confirm Pending Payments</a>
+        {% else %}
+        contact your treasurer to confirm the payments.
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Contributions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-piggy-bank"></i> Contributions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if contributions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contribution in contributions %}
+                                <tr>
+                                    <td>KSh {{ contribution.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if contribution.status == 'confirmed' %}success{% elif contribution.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {% if contribution.status == 'confirmed' %}
+                                                <i class="fas fa-check"></i> Confirmed
+                                            {% elif contribution.status == 'pending' %}
+                                                <i class="fas fa-clock"></i> Pending
+                                            {% else %}
+                                                <i class="fas fa-times"></i> Failed
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ contribution.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if contribution.payhero_reference %}
+                                            <small class="text-muted">{{ contribution.payhero_reference|truncatechars:15 }}</small>
+                                        {% else %}
+                                            <small class="text-muted">-</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No contributions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Repayments -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card"></i> Repayments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if repayments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repayment in repayments %}
+                                <tr>
+                                    <td>KSh {{ repayment.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if repayment.status == 'confirmed' %}success{% elif repayment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {% if repayment.status == 'confirmed' %}
+                                                <i class="fas fa-check"></i> Confirmed
+                                            {% elif repayment.status == 'pending' %}
+                                                <i class="fas fa-clock"></i> Pending
+                                            {% else %}
+                                                <i class="fas fa-times"></i> Failed
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ repayment.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if repayment.payhero_reference %}
+                                            <small class="text-muted">{{ repayment.payhero_reference|truncatechars:15 }}</small>
+                                        {% else %}
+                                            <small class="text-muted">-</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No repayments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Instructions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Payment Status Guide
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-clock text-warning"></i> Pending</h6>
+                        <p class="text-muted">Payment sent via STK push, awaiting M-Pesa confirmation. Check your phone and complete the payment.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-check text-success"></i> Confirmed</h6>
+                        <p class="text-muted">Payment successfully processed and confirmed by M-Pesa. Your balance has been updated.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-times text-danger"></i> Failed</h6>
+                        <p class="text-muted">Payment failed or was cancelled. You may need to retry the payment.</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-mobile-alt"></i> STK Push Payment Process:</h6>
+                    <ol class="mb-0">
+                        <li>Click "Proceed to Payment" and enter your phone number</li>
+                        <li>STK push notification is sent to your phone</li>
+                        <li>Enter your M-Pesa PIN to complete payment</li>
+                        <li>Payment status updates automatically (or manually via debug tool)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Back to Dashboard -->
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+

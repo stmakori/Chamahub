@@ -1,0 +1,112 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Apply for Loan - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-hand-holding-usd"></i> Apply for Loan
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">Loan Amount (KSh)</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.amount.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.interest_rate.id_for_label }}" class="form-label">Interest Rate (%)</label>
+                                {{ form.interest_rate }}
+                                {% if form.interest_rate.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.interest_rate.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.purpose.id_for_label }}" class="form-label">Purpose of Loan</label>
+                        {{ form.purpose }}
+                        {% if form.purpose.errors %}
+                            <div class="text-danger">
+                                {% for error in form.purpose.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.repayment_period_months.id_for_label }}" class="form-label">Repayment Period (Months)</label>
+                        {{ form.repayment_period_months }}
+                        {% if form.repayment_period_months.errors %}
+                            <div class="text-danger">
+                                {% for error in form.repayment_period_months.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Important:</strong> Your loan application will be reviewed by the treasurer before approval. 
+                        You'll be notified of the decision via your dashboard.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="fas fa-paper-plane"></i> Submit Application
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loan Terms -->
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-contract"></i> Loan Terms & Conditions
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Default interest rate is 10% per annum</li>
+                    <li><i class="fas fa-check text-success"></i> Repayment period ranges from 1 to 60 months</li>
+                    <li><i class="fas fa-check text-success"></i> All loans require treasurer approval</li>
+                    <li><i class="fas fa-check text-success"></i> Repayments can be made in installments</li>
+                    <li><i class="fas fa-check text-success"></i> Interest is calculated on the principal amount</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

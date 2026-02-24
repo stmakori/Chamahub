@@ -1,0 +1,107 @@
+{% extends 'core/base.html' %}
+
+{% block title %}ChamaHub - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">
+            <i class="fas fa-users text-primary"></i> Welcome to ChamaHub
+        </h1>
+        <p class="lead mb-4">
+            A comprehensive chama management system that combines member contributions and loans, 
+            integrated with Payhero for seamless payment processing.
+        </p>
+        
+        {% if not user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-md-2">
+                    <i class="fas fa-user-plus"></i> Join ChamaHub
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            </div>
+        {% else %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-piggy-bank fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Member Contributions</h5>
+                <p class="card-text">
+                    Track and manage member contributions with automatic payment processing 
+                    through Payhero integration.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-hand-holding-usd fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Loan Management</h5>
+                <p class="card-text">
+                    Apply for loans, track approvals, and manage repayments with 
+                    interest calculations and progress tracking.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Financial Tracking</h5>
+                <p class="card-text">
+                    Monitor group balance, individual member balances, and 
+                    comprehensive financial reports.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Member registration and authentication</li>
+                            <li><i class="fas fa-check text-success"></i> Contribution tracking and payment processing</li>
+                            <li><i class="fas fa-check text-success"></i> Loan application and approval workflow</li>
+                            <li><i class="fas fa-check text-success"></i> Repayment tracking with progress indicators</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Treasurer dashboard for loan approvals</li>
+                            <li><i class="fas fa-check text-success"></i> Group and individual balance calculations</li>
+                            <li><i class="fas fa-check text-success"></i> Payhero payment integration</li>
+                            <li><i class="fas fa-check text-success"></i> Webhook support for payment confirmations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

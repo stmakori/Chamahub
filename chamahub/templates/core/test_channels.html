@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Test Payhero Channel IDs - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-bug"></i> Payhero Channel ID Testing
+        </h2>
+        <p class="text-muted">Testing different channel IDs to find the correct one for your account.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Channel ID Test Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Channel ID</th>
+                                <th>Status Code</th>
+                                <th>Success</th>
+                                <th>Response</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr class="{% if result.success %}table-success{% elif result.status_code == 404 %}table-warning{% else %}table-danger{% endif %}">
+                                <td><strong>{{ result.channel_id }}</strong></td>
+                                <td>
+                                    <span class="badge bg-{% if result.success %}success{% elif result.status_code == 404 %}warning{% else %}danger{% endif %}">
+                                        {{ result.status_code }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if result.success %}
+                                        <i class="fas fa-check text-success"></i> Yes
+                                    {% else %}
+                                        <i class="fas fa-times text-danger"></i> No
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ result.response }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> How to Use Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> <strong>Green rows</strong>: Channel ID works (201 status)</li>
+                    <li><i class="fas fa-exclamation-triangle text-warning"></i> <strong>Yellow rows</strong>: Channel ID not found (404 status)</li>
+                    <li><i class="fas fa-times text-danger"></i> <strong>Red rows</strong>: Other errors</li>
+                </ul>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Next Steps:</strong>
+                    <ol class="mb-0">
+                        <li>Look for green rows (successful channel IDs)</li>
+                        <li>Update <code>PAYHERO_CHANNEL_ID</code> in settings.py with a working channel ID</li>
+                        <li>Test payments with the correct channel ID</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog"></i> Update Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>To update your channel ID, edit <code>chamahub/settings.py</code>:</p>
+                <pre class="bg-light p-3"><code>PAYHERO_CHANNEL_ID = 'YOUR_WORKING_CHANNEL_ID'</code></pre>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Note:</strong> This test uses small amounts (1 KSh) to avoid actual charges. 
+                    The channel ID that returns 201 status should work for real payments.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="{% url 'test_channels' %}" class="btn btn-primary">
+                <i class="fas fa-refresh"></i> Test Again
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

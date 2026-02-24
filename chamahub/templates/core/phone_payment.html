@@ -1,0 +1,128 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Payment - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-mobile-alt"></i> M-Pesa Payment
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Payment Details -->
+                <div class="alert alert-info mb-4">
+                    <h6><i class="fas fa-info-circle"></i> Payment Details</h6>
+                    <p class="mb-1"><strong>Type:</strong> {{ description }}</p>
+                    <p class="mb-1"><strong>Amount:</strong> KSh {{ amount|floatformat:2 }}</p>
+                    <p class="mb-0"><strong>Method:</strong> M-Pesa STK Push</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">
+                            <i class="fas fa-phone"></i> Phone Number
+                        </label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="phone_number" 
+                               name="phone_number" 
+                               placeholder="254XXXXXXXXX or 07XXXXXXXX"
+                               pattern="^(254|0)[0-9]{9}$"
+                               required>
+                        <div class="form-text">
+                            Enter your M-Pesa registered phone number (e.g., 254712345678 or 0712345678)
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Important:</strong> 
+                        <ul class="mb-0 mt-2">
+                            <li>Ensure your phone number is registered with M-Pesa</li>
+                            <li>You will receive an STK push notification on your phone</li>
+                            <li>Enter your M-Pesa PIN when prompted</li>
+                            <li>Payment will be processed automatically</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane"></i> Send STK Push
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- M-Pesa Instructions -->
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-question-circle"></i> How M-Pesa STK Push Works
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-mobile-alt text-success"></i> Step 1: Enter Phone Number</h6>
+                        <p>Enter your M-Pesa registered phone number in the format 254XXXXXXXXX or 07XXXXXXXX</p>
+                        
+                        <h6><i class="fas fa-paper-plane text-primary"></i> Step 2: Send STK Push</h6>
+                        <p>Click "Send STK Push" to initiate the payment request</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-bell text-warning"></i> Step 3: Check Your Phone</h6>
+                        <p>You will receive an M-Pesa STK push notification on your phone</p>
+                        
+                        <h6><i class="fas fa-key text-info"></i> Step 4: Enter PIN</h6>
+                        <p>Enter your M-Pesa PIN when prompted to complete the payment</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-format phone number
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    
+    // Convert 07XXXXXXXX to 2547XXXXXXXX
+    if (value.startsWith('07') && value.length === 10) {
+        value = '254' + value.substring(1);
+    }
+    
+    // Convert 7XXXXXXXX to 2547XXXXXXXX
+    if (value.startsWith('7') && value.length === 9) {
+        value = '254' + value;
+    }
+    
+    e.target.value = value;
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const phoneInput = document.getElementById('phone_number');
+    const phoneValue = phoneInput.value.replace(/\D/g, '');
+    
+    if (!phoneValue.startsWith('254') || phoneValue.length !== 12) {
+        e.preventDefault();
+        alert('Please enter a valid phone number in the format 254XXXXXXXXX or 07XXXXXXXX');
+        phoneInput.focus();
+    }
+});
+</script>
+{% endblock %}

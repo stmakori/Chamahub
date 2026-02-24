@@ -1,0 +1,491 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-tachometer-alt"></i> Member Dashboard
+            <small class="text-muted">Welcome, {{ user.get_full_name|default:user.username }}!</small>
+        </h2>
+    </div>
+</div>
+
+<!-- Balance Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-wallet fa-2x text-primary mb-2"></i>
+                <h5 class="card-title">Total Balance</h5>
+                <h3 class="{% if member_balance >= 0 %}balance-positive{% else %}balance-negative{% endif %}">
+                    KSh {{ member_balance|floatformat:2 }}
+                </h3>
+                <small class="text-muted">Available for withdrawal</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-piggy-bank fa-2x text-success mb-2"></i>
+                <h5 class="card-title">Contributions</h5>
+                <h3 class="text-success">KSh {{ contributions_balance|floatformat:2 }}</h3>
+                <small class="text-muted">Your contributions</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-hand-holding-usd fa-2x text-info mb-2"></i>
+                <h5 class="card-title">Net Loans</h5>
+                <h3 class="text-info">KSh {{ loans_balance|floatformat:2 }}</h3>
+                <small class="text-muted">Loans - Repayments</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                <h5 class="card-title">Total Loans</h5>
+                <h3 class="text-warning">KSh {{ total_loans|floatformat:2 }}</h3>
+                <small class="text-muted">All disbursed loans</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt"></i> Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'make_contribution' %}" class="btn btn-success btn-lg w-100 mb-2">
+                            <i class="fas fa-plus-circle"></i> Make Contribution
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'apply_loan' %}" class="btn btn-warning btn-lg w-100 mb-2">
+                            <i class="fas fa-hand-holding-usd"></i> Apply for Loan
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        {% if active_loans %}
+                            <a href="#active-loans" class="btn btn-info btn-lg w-100 mb-2">
+                                <i class="fas fa-credit-card"></i> Make Repayment
+                                <small class="d-block">Click on loan cards below</small>
+                            </a>
+                        {% else %}
+                            <button class="btn btn-info btn-lg w-100 mb-2" disabled title="No active loans to repay">
+                                <i class="fas fa-credit-card"></i> Make Repayment
+                                <small class="d-block">No active loans</small>
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        {% if member_balance > 0 %}
+                            <a href="{% url 'make_withdrawal' %}" class="btn btn-danger btn-lg w-100 mb-2">
+                                <i class="fas fa-money-bill-wave"></i> Withdraw
+                                <small class="d-block">KSh {{ member_balance|floatformat:0 }}</small>
+                            </a>
+                        {% else %}
+                            <button class="btn btn-danger btn-lg w-100 mb-2" disabled title="No balance to withdraw">
+                                <i class="fas fa-money-bill-wave"></i> Withdraw
+                                <small class="d-block">No balance</small>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Pending Payments Alert -->
+                {% if pending_payments %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-clock"></i>
+                    <strong>Pending Payments:</strong> You have {{ pending_payments }} pending payments being processed. 
+                    <a href="{% url 'payment_status' %}" class="btn btn-sm btn-warning">View Payment Status</a>
+                    {% if user.is_superuser %}
+                    <a href="{% url 'confirm_payments' %}" class="btn btn-sm btn-outline-warning">Debug: Confirm All</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Contributions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-piggy-bank"></i> Recent Contributions
+                </h5>
+                <a href="{% url 'make_contribution' %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus"></i> New
+                </a>
+            </div>
+            <div class="card-body">
+                {% if contributions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contribution in contributions %}
+                                <tr>
+                                    <td>KSh {{ contribution.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if contribution.status == 'confirmed' %}success{% elif contribution.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ contribution.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ contribution.date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No contributions yet. <a href="{% url 'make_contribution' %}">Make your first contribution!</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Loans -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-hand-holding-usd"></i> Recent Loans
+                </h5>
+                <a href="{% url 'apply_loan' %}" class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-plus"></i> Apply
+                </a>
+            </div>
+            <div class="card-body">
+                {% if loans %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in loans %}
+                                <tr>
+                                    <td>KSh {{ loan.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if loan.status == 'disbursed' %}success{% elif loan.status == 'approved' %}info{% elif loan.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ loan.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ loan.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No loans yet. <a href="{% url 'apply_loan' %}">Apply for your first loan!</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Loans with Repayment Progress -->
+<div class="row mt-4" id="active-loans">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line"></i> Active Loans & Repayment Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_loans %}
+                    {% for loan in active_loans %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card loan-card" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#repaymentModal{{ loan.id }}">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-hand-holding-usd text-primary"></i>
+                                                Loan of KSh {{ loan.amount|floatformat:2 }}
+                                            </h6>
+                                            <p class="text-muted mb-2">{{ loan.purpose|truncatechars:60 }}</p>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <small class="text-muted">
+                                                        <strong>Total Due:</strong><br>
+                                                        KSh {{ loan.total_due|floatformat:2 }}
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <small class="text-muted">
+                                                        <strong>Interest:</strong><br>
+                                                        {{ loan.interest_rate }}%
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <small class="text-muted">
+                                                        <strong>Period:</strong><br>
+                                                        {{ loan.repayment_period_months }} months
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 8px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ loan.repayment_progress }}%">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted mt-1 d-block">
+                                                Repayment Progress: {{ loan.repayment_progress|floatformat:1 }}%
+                                            </small>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="text-primary">
+                                                <i class="fas fa-credit-card fa-2x"></i>
+                                                <p class="mb-0 mt-2"><strong>Click to Repay</strong></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h6>No Active Loans</h6>
+                        <p>You don't have any disbursed loans that require repayment.</p>
+                        <a href="{% url 'apply_loan' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-hand-holding-usd"></i> Apply for a Loan
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Repayments -->
+{% if repayments %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card"></i> Recent Repayments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Loan</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for repayment in repayments %}
+                            <tr>
+                                <td>KSh {{ repayment.loan.amount|floatformat:2 }}</td>
+                                <td>KSh {{ repayment.amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if repayment.status == 'confirmed' %}success{% elif repayment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ repayment.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ repayment.date|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Repayment Modals -->
+{% for loan in active_loans %}
+<div class="modal fade" id="repaymentModal{{ loan.id }}" tabindex="-1" aria-labelledby="repaymentModalLabel{{ loan.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="repaymentModalLabel{{ loan.id }}">
+                    <i class="fas fa-credit-card"></i> Make Repayment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loan Summary -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Loan Details</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Principal:</strong> KSh {{ loan.amount|floatformat:2 }}<br>
+                            <strong>Interest Rate:</strong> {{ loan.interest_rate }}%<br>
+                            <strong>Purpose:</strong> {{ loan.purpose }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Total Due:</strong> KSh {{ loan.total_due|floatformat:2 }}<br>
+                            <strong>Progress:</strong> {{ loan.repayment_progress|floatformat:1 }}%<br>
+                            <strong>Period:</strong> {{ loan.repayment_period_months }} months
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Repayment Options -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6><i class="fas fa-bolt"></i> Quick Repayment Options</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center quick-repay" data-amount="{{ loan.amount }}">
+                            <div class="card-body">
+                                <h5 class="text-primary">KSh {{ loan.amount|floatformat:0 }}</h5>
+                                <small class="text-muted">Principal Only</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center quick-repay" data-amount="{{ loan.total_due }}">
+                            <div class="card-body">
+                                <h5 class="text-success">KSh {{ loan.total_due|floatformat:0 }}</h5>
+                                <small class="text-muted">Full Amount</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center quick-repay" data-amount="1000">
+                            <div class="card-body">
+                                <h5 class="text-warning">KSh 1,000</h5>
+                                <small class="text-muted">Partial Payment</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Custom Amount Form -->
+                <form id="repaymentForm{{ loan.id }}" method="post" action="{% url 'make_repayment' loan.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="amount{{ loan.id }}" class="form-label">Repayment Amount (KSh)</label>
+                        <input type="number" class="form-control" id="amount{{ loan.id }}" name="amount" 
+                               min="1" max="{{ loan.total_due }}" step="0.01" required>
+                        <div class="form-text">
+                            Maximum: KSh {{ loan.total_due|floatformat:2 }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes{{ loan.id }}" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes{{ loan.id }}" name="notes" rows="2" 
+                                  placeholder="Add any notes about this repayment..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-mobile-alt"></i>
+                        <strong>M-Pesa STK Push:</strong> After submitting, you'll be asked for your phone number to receive an M-Pesa STK push notification for secure payment.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-credit-card"></i> Proceed to Payment
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Custom CSS for loan cards -->
+<style>
+.loan-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.loan-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+    transform: translateY(-2px);
+}
+
+.quick-repay {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.quick-repay:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.quick-repay.selected {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
+</style>
+
+<!-- JavaScript for quick repayment options -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quick repayment option click handlers
+    document.querySelectorAll('.quick-repay').forEach(function(card) {
+        card.addEventListener('click', function() {
+            const amount = this.getAttribute('data-amount');
+            const modalId = this.closest('.modal').id;
+            const loanId = modalId.replace('repaymentModal', '');
+            const amountInput = document.getElementById('amount' + loanId);
+            
+            if (amountInput) {
+                amountInput.value = parseFloat(amount).toFixed(2);
+                
+                // Visual feedback
+                document.querySelectorAll('.quick-repay').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

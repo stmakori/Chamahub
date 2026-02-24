@@ -1,0 +1,241 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Treasurer Dashboard - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-crown"></i> Treasurer Dashboard
+            <small class="text-muted">Welcome, {{ user.get_full_name|default:user.username }}!</small>
+        </h2>
+    </div>
+</div>
+
+<!-- Group Balance Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-coins fa-2x text-primary mb-2"></i>
+                <h5 class="card-title">Group Balance</h5>
+                <h3 class="{% if group_balance >= 0 %}balance-positive{% else %}balance-negative{% endif %}">
+                    KSh {{ group_balance|floatformat:2 }}
+                </h3>
+                <small class="text-muted">Total Contributions - Disbursed Loans</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-piggy-bank fa-2x text-success mb-2"></i>
+                <h5 class="card-title">Total Contributions</h5>
+                <h3 class="text-success">KSh {{ total_contributions|floatformat:2 }}</h3>
+                <small class="text-muted">All confirmed contributions</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-hand-holding-usd fa-2x text-warning mb-2"></i>
+                <h5 class="card-title">Disbursed Loans</h5>
+                <h3 class="text-warning">KSh {{ total_disbursed_loans|floatformat:2 }}</h3>
+                <small class="text-muted">Total amount disbursed</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Loans for Approval -->
+{% if pending_loans %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock"></i> Pending Loan Approvals
+                    <span class="badge bg-warning">{{ pending_loans.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Amount</th>
+                                <th>Interest Rate</th>
+                                <th>Purpose</th>
+                                <th>Period</th>
+                                <th>Date Applied</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in pending_loans %}
+                            <tr>
+                                <td>{{ loan.member.get_full_name|default:loan.member.username }}</td>
+                                <td>KSh {{ loan.amount|floatformat:2 }}</td>
+                                <td>{{ loan.interest_rate }}%</td>
+                                <td>{{ loan.purpose|truncatechars:30 }}</td>
+                                <td>{{ loan.repayment_period_months }} months</td>
+                                <td>{{ loan.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'approve_loan' loan.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Recent Contributions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-piggy-bank"></i> Recent Contributions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_contributions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contribution in recent_contributions %}
+                                <tr>
+                                    <td>{{ contribution.member.get_full_name|default:contribution.member.username }}</td>
+                                    <td>KSh {{ contribution.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if contribution.status == 'confirmed' %}success{% elif contribution.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ contribution.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ contribution.date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent contributions.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Repayments -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card"></i> Recent Repayments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_repayments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repayment in recent_repayments %}
+                                <tr>
+                                    <td>{{ repayment.loan.member.get_full_name|default:repayment.loan.member.username }}</td>
+                                    <td>KSh {{ repayment.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if repayment.status == 'confirmed' %}success{% elif repayment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ repayment.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ repayment.date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent repayments.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Member Balances -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users"></i> Member Balances
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if member_balances %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Role</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member_data in member_balances %}
+                                <tr>
+                                    <td>{{ member_data.member.get_full_name|default:member_data.member.username }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if member_data.role == 'treasurer' %}primary{% elif member_data.role == 'chairperson' %}success{% else %}secondary{% endif %}">
+                                            {{ member_data.role|title }}
+                                        </span>
+                                    </td>
+                                    <td class="{% if member_data.balance >= 0 %}balance-positive{% else %}balance-negative{% endif %}">
+                                        KSh {{ member_data.balance|floatformat:2 }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if member_data.balance >= 0 %}success{% else %}warning{% endif %}">
+                                            {% if member_data.balance >= 0 %}Positive{% else %}Negative{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No member data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

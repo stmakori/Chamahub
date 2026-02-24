@@ -1,0 +1,173 @@
+/* ChamaHub Custom Styles */
+
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #3498db;
+    --light-color: #ecf0f1;
+    --dark-color: #2c3e50;
+}
+
+/* Custom Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Balance Colors */
+.balance-positive {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.balance-negative {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+/* Status Badges */
+.status-pending {
+    color: var(--warning-color);
+}
+
+.status-confirmed {
+    color: var(--success-color);
+}
+
+.status-failed {
+    color: var(--danger-color);
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: var(--light-color);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    font-weight: 600;
+}
+
+/* Progress Bar Enhancements */
+.progress {
+    height: 1.5rem;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background-color: var(--success-color);
+    transition: width 0.6s ease;
+}
+
+/* Navigation Enhancements */
+.navbar-brand {
+    font-weight: bold;
+    color: var(--primary-color) !important;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: var(--dark-color);
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: var(--primary-color);
+}
+
+/* Form Enhancements */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+/* Alert Enhancements */
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+/* Table Enhancements */
+.table th {
+    background-color: var(--light-color);
+    border-top: none;
+    font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+/* Icon Enhancements */
+.fa-2x {
+    font-size: 2em;
+}
+
+.fa-3x {
+    font-size: 3em;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Animation Enhancements */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Custom Utilities */
+.text-chamahub {
+    color: var(--primary-color);
+}
+
+.bg-chamahub {
+    background-color: var(--primary-color);
+}
+
+.border-chamahub {
+    border-color: var(--primary-color);
+}
