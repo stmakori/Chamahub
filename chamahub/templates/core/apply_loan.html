@@ -1,85 +1,221 @@
 {% extends 'core/base.html' %}
+{% load stellar_tags %}
 
 {% block title %}Apply for Loan - ChamaHub{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
+        <!-- Main Application Card -->
+        <div class="card border-0 shadow-lg animate__animated animate__fadeIn">
+            <div class="card-header bg-gradient-primary text-white py-3">
                 <h4 class="mb-0">
-                    <i class="fas fa-hand-holding-usd"></i> Apply for Loan
+                    <i class="fas fa-hand-holding-usd me-2"></i>Apply for Loan
                 </h4>
+                <p class="text-white-50 small mb-0 mt-1">
+                    Fill in the details below to submit your loan application
+                </p>
             </div>
-            <div class="card-body">
-                <form method="post">
+
+            <div class="card-body p-4">
+
+                <!-- Eligibility warning -->
+                {% if not is_eligible %}
+                <div class="alert alert-warning d-flex align-items-center mb-4">
+                    <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                    <div>
+                        <strong>You are not yet eligible for a loan.</strong>
+                        <p class="mb-0">
+                            You need at least 3 confirmed contributions.
+                            You currently have {{ contributions_count }}.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- ✅ Blockchain transparency notice -->
+                <div class="alert alert-info d-flex align-items-center mb-4 border-0 border-start border-4 border-info">
+                    <i class="fas fa-link fs-4 me-3 text-info"></i>
+                    <div>
+                        <strong>Blockchain Transparency</strong>
+                        <p class="mb-0 small">
+                            Once approved and disbursed, your loan will be permanently recorded
+                            on the Stellar blockchain. You can verify it anytime in the
+                            <a href="{% url 'blockchain_dashboard' %}" class="alert-link">
+                                Blockchain Explorer
+                            </a>.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" class="needs-validation" novalidate id="loanForm">
                     {% csrf_token %}
-                    
-                    <div class="row">
+
+                    <!-- Loan Amount and Interest Rate Row -->
+                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="{{ form.amount.id_for_label }}" class="form-label">Loan Amount (KSh)</label>
+                            <label for="{{ form.amount.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-coins text-warning me-2"></i>Loan Amount (KSh)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">KSh</span>
                                 {{ form.amount }}
-                                {% if form.amount.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.amount.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
                             </div>
+                            {% if form.amount.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.amount.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Min: KSh 1,000 | Max: KSh 500,000
+                                </div>
+                            {% endif %}
                         </div>
+
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="{{ form.interest_rate.id_for_label }}" class="form-label">Interest Rate (%)</label>
+                            <label for="{{ form.interest_rate.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-percentage text-info me-2"></i>Interest Rate (%)
+                            </label>
+                            <div class="input-group">
                                 {{ form.interest_rate }}
-                                {% if form.interest_rate.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.interest_rate.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
+                                <span class="input-group-text bg-light">%</span>
+                            </div>
+                            {% if form.interest_rate.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.interest_rate.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Default rate: 10% per annum
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Live Calculator Preview -->
+                    <div class="bg-light rounded-3 p-3 mb-4" id="calculatorPreview" style="display: none;">
+                        <h6 class="fw-semibold mb-3">
+                            <i class="fas fa-calculator text-primary me-2"></i>Quick Calculation
+                        </h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Principal:</small>
+                                <strong class="fs-5" id="calcPrincipal">KSh 0</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Interest (10%):</small>
+                                <strong class="fs-5" id="calcInterest">KSh 0</strong>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="border-top pt-2">
+                                    <small class="text-muted d-block">Total Repayable:</small>
+                                    <strong class="fs-4 text-primary" id="calcTotal">KSh 0</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.purpose.id_for_label }}" class="form-label">Purpose of Loan</label>
+
+                    <!-- Loan Purpose -->
+                    <div class="mb-4">
+                        <label for="{{ form.purpose.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-file-alt text-success me-2"></i>Purpose of Loan
+                        </label>
                         {{ form.purpose }}
                         {% if form.purpose.errors %}
-                            <div class="text-danger">
+                            <div class="text-danger small mt-1">
                                 {% for error in form.purpose.errors %}
-                                    <small>{{ error }}</small>
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
                                 {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Briefly describe why you need this loan
                             </div>
                         {% endif %}
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.repayment_period_months.id_for_label }}" class="form-label">Repayment Period (Months)</label>
-                        {{ form.repayment_period_months }}
+
+                    <!-- Repayment Period -->
+                    <div class="mb-4">
+                        <label for="{{ form.repayment_period_months.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-calendar-alt text-danger me-2"></i>Repayment Period (Months)
+                        </label>
+                        <div class="input-group">
+                            {{ form.repayment_period_months }}
+                            <span class="input-group-text bg-light">months</span>
+                        </div>
                         {% if form.repayment_period_months.errors %}
-                            <div class="text-danger">
+                            <div class="text-danger small mt-1">
                                 {% for error in form.repayment_period_months.errors %}
-                                    <small>{{ error }}</small>
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
                                 {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Choose between 1-60 months
                             </div>
                         {% endif %}
                     </div>
-                    
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Important:</strong> Your loan application will be reviewed by the treasurer before approval. 
-                        You'll be notified of the decision via your dashboard.
+
+                    <!-- Repayment Schedule Preview -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-bordered bg-light">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Duration</th>
+                                    <th>Monthly Payment</th>
+                                    <th>Total Interest</th>
+                                    <th>Total Payment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>6 months</td>
+                                    <td id="monthly6">-</td>
+                                    <td id="interest6">-</td>
+                                    <td id="total6">-</td>
+                                </tr>
+                                <tr>
+                                    <td>12 months</td>
+                                    <td id="monthly12">-</td>
+                                    <td id="interest12">-</td>
+                                    <td id="total12">-</td>
+                                </tr>
+                                <tr>
+                                    <td>24 months</td>
+                                    <td id="monthly24">-</td>
+                                    <td id="interest24">-</td>
+                                    <td id="total24">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-warning btn-lg">
-                            <i class="fas fa-paper-plane"></i> Submit Application
+
+                    <!-- Important Notice -->
+                    <div class="alert alert-warning border-0 border-start border-4 border-warning d-flex align-items-center mb-4"
+                         role="alert">
+                        <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                        <div>
+                            <strong>Important:</strong> Your loan application will be reviewed by
+                            the treasurer before approval. You'll be notified of the decision via
+                            your dashboard within 24-48 hours.
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-warning btn-lg" id="submitBtn"
+                                {% if not is_eligible %}disabled{% endif %}>
+                            <span class="spinner-border spinner-border-sm d-none me-2"
+                                  role="status" id="submitSpinner"></span>
+                            <i class="fas fa-paper-plane me-2" id="submitIcon"></i>
+                            Submit Application
                         </button>
                         <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
                         </a>
                     </div>
                 </form>
@@ -88,25 +224,286 @@
     </div>
 </div>
 
-<!-- Loan Terms -->
-<div class="row mt-4">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-file-contract"></i> Loan Terms & Conditions
-                </h5>
+<!-- Loan Terms & Features Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h5 class="text-center mb-4">
+            <i class="fas fa-file-contract text-primary me-2"></i>Loan Terms & Features
+        </h5>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-shadow">
+            <div class="card-body text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                    <i class="fas fa-percentage text-primary fs-3"></i>
+                </div>
+                <h6 class="fw-bold">Competitive Interest</h6>
+                <p class="text-muted small mb-0">
+                    Default interest rate of 10% per annum, calculated on reducing balance
+                </p>
             </div>
-            <div class="card-body">
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-success"></i> Default interest rate is 10% per annum</li>
-                    <li><i class="fas fa-check text-success"></i> Repayment period ranges from 1 to 60 months</li>
-                    <li><i class="fas fa-check text-success"></i> All loans require treasurer approval</li>
-                    <li><i class="fas fa-check text-success"></i> Repayments can be made in installments</li>
-                    <li><i class="fas fa-check text-success"></i> Interest is calculated on the principal amount</li>
-                </ul>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-shadow">
+            <div class="card-body text-center">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                    <i class="fas fa-clock text-success fs-3"></i>
+                </div>
+                <h6 class="fw-bold">Flexible Period</h6>
+                <p class="text-muted small mb-0">
+                    Repayment period from 1 to 60 months to suit your needs
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-shadow">
+            <div class="card-body text-center">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                    <i class="fas fa-shield-alt text-warning fs-3"></i>
+                </div>
+                <h6 class="fw-bold">Secure Process</h6>
+                <p class="text-muted small mb-0">
+                    All loans require treasurer approval for security and fairness
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Blockchain feature card -->
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-shadow">
+            <div class="card-body text-center">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                    <i class="fas fa-link text-info fs-3"></i>
+                </div>
+                <h6 class="fw-bold">Blockchain Verified</h6>
+                <p class="text-muted small mb-0">
+                    Every disbursed loan is permanently recorded on the Stellar blockchain
+                    for full transparency
+                </p>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Terms & Conditions Card -->
+<div class="row mt-3">
+    <div class="col-md-8 mx-auto">
+        <div class="card border-0 bg-light">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-list-check text-primary me-2"></i>Loan Terms & Conditions
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span class="small">Default interest rate is 10% per annum</span>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span class="small">Repayment period ranges from 1 to 60 months</span>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span class="small">All loans require treasurer approval</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span class="small">Repayments can be made in installments</span>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span class="small">Early repayment allowed with no penalty</span>
+                            </li>
+                            <!-- ✅ Blockchain term -->
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span class="small">Disbursement recorded on Stellar blockchain</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loan Calculator Modal -->
+<div class="modal fade" id="calculatorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-calculator me-2"></i>Loan Calculator
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Adjust the sliders to see your estimated payments</p>
+
+                <label class="form-label fw-semibold">
+                    Loan Amount: KSh <span id="modalAmount">50,000</span>
+                </label>
+                <input type="range" class="form-range" min="1000" max="500000"
+                       step="1000" value="50000" id="amountRange">
+
+                <label class="form-label fw-semibold mt-3">
+                    Interest Rate: <span id="modalRate">10</span>%
+                </label>
+                <input type="range" class="form-range" min="5" max="20"
+                       step="0.5" value="10" id="rateRange">
+
+                <label class="form-label fw-semibold mt-3">
+                    Period: <span id="modalPeriod">12</span> months
+                </label>
+                <input type="range" class="form-range" min="1" max="60"
+                       step="1" value="12" id="periodRange">
+
+                <hr>
+
+                <div class="row text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Monthly</small>
+                        <strong class="fs-5" id="modalMonthly">KSh 0</strong>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Interest</small>
+                        <strong class="fs-5" id="modalInterest">KSh 0</strong>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Total</small>
+                        <strong class="fs-5" id="modalTotal">KSh 0</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    Use These Values
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const amountInput  = document.getElementById('{{ form.amount.id_for_label }}');
+    const rateInput    = document.getElementById('{{ form.interest_rate.id_for_label }}');
+    const periodInput  = document.getElementById('{{ form.repayment_period_months.id_for_label }}');
+    const calcPreview  = document.getElementById('calculatorPreview');
+    const submitBtn    = document.getElementById('submitBtn');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const submitIcon   = document.getElementById('submitIcon');
+
+    if (amountInput && !amountInput.value) amountInput.value = 50000;
+    if (rateInput   && !rateInput.value)   rateInput.value   = 10;
+    if (periodInput && !periodInput.value) periodInput.value = 12;
+
+    function fmt(n) {
+        return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateCalculator() {
+        const amount = parseFloat(amountInput?.value) || 0;
+        const rate   = parseFloat(rateInput?.value)   || 10;
+
+        if (amount > 0) {
+            calcPreview.style.display = 'block';
+            const interest = (amount * rate) / 100;
+            const total    = amount + interest;
+
+            document.getElementById('calcPrincipal').textContent = `KSh ${amount.toLocaleString()}`;
+            document.getElementById('calcInterest').textContent  = `KSh ${fmt(interest)}`;
+            document.getElementById('calcTotal').textContent     = `KSh ${fmt(total)}`;
+
+            [6, 12, 24].forEach(months => {
+                document.getElementById(`monthly${months}`).textContent  = `KSh ${fmt(total / months)}`;
+                document.getElementById(`interest${months}`).textContent = `KSh ${fmt(interest)}`;
+                document.getElementById(`total${months}`).textContent    = `KSh ${fmt(total)}`;
+            });
+        } else {
+            calcPreview.style.display = 'none';
+        }
+    }
+
+    [amountInput, rateInput, periodInput].forEach(el => {
+        if (el) {
+            el.addEventListener('input', updateCalculator);
+            el.addEventListener('keyup', updateCalculator);
+        }
+    });
+
+    updateCalculator();
+
+    // Form submit — prevent if ineligible, show spinner otherwise
+    document.getElementById('loanForm')?.addEventListener('submit', function (e) {
+        if (amountInput && parseFloat(amountInput.value) < 1000) {
+            e.preventDefault();
+            alert('Minimum loan amount is KSh 1,000');
+            return;
+        }
+        submitBtn.disabled = true;
+        submitSpinner.classList.remove('d-none');
+        submitIcon.classList.add('d-none');
+    });
+
+    // Form field focus highlight
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('focus', () => input.closest('.mb-3, .mb-4')?.classList.add('focused'));
+        input.addEventListener('blur',  () => input.closest('.mb-3, .mb-4')?.classList.remove('focused'));
+    });
+
+    // Modal calculator
+    const amountRange = document.getElementById('amountRange');
+    const rateRange   = document.getElementById('rateRange');
+    const periodRange = document.getElementById('periodRange');
+
+    function updateModal() {
+        const amount = parseInt(amountRange.value);
+        const rate   = parseFloat(rateRange.value);
+        const period = parseInt(periodRange.value);
+
+        document.getElementById('modalAmount').textContent = amount.toLocaleString();
+        document.getElementById('modalRate').textContent   = rate;
+        document.getElementById('modalPeriod').textContent = period;
+
+        const interest = (amount * rate) / 100;
+        const total    = amount + interest;
+        document.getElementById('modalMonthly').textContent  = `KSh ${fmt(total / period)}`;
+        document.getElementById('modalInterest').textContent = `KSh ${fmt(interest)}`;
+        document.getElementById('modalTotal').textContent    = `KSh ${fmt(total)}`;
+    }
+
+    if (amountRange) {
+        [amountRange, rateRange, periodRange].forEach(el => el.addEventListener('input', updateModal));
+        updateModal();
+    }
+
+    // Hover lift effect
+    document.querySelectorAll('.hover-shadow').forEach(card => {
+        card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-5px)'; card.style.transition = 'all 0.3s ease'; });
+        card.addEventListener('mouseleave', () => { card.style.transform = 'translateY(0)'; });
+    });
+});
+</script>
+
+<style>
+.hover-shadow { transition: all 0.3s ease; }
+.hover-shadow:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; }
+.bg-gradient-primary { background: linear-gradient(135deg, var(--bs-primary), #1e2b37); }
+.text-white-50 { color: rgba(255,255,255,0.7) !important; }
+.form-control:focus { border-color: var(--bs-primary); box-shadow: 0 0 0 0.2rem rgba(44,62,80,.15); }
+.btn, .card, .form-control { transition: all 0.3s ease; }
+</style>
 {% endblock %}

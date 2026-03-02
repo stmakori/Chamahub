@@ -1,0 +1,281 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Pending Loans - ChamaHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <div>
+        <h1 class="h2">
+            <i class="fas fa-clock text-warning me-2"></i>Pending Loan Approvals
+        </h1>
+        <p class="text-muted mb-0">Review and manage all pending loan applications</p>
+    </div>
+    <div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 mb-2">
+                            <i class="fas fa-clock me-1"></i>Pending Loans
+                        </span>
+                        <h3 class="text-warning mb-1">{{ pending_loans.count }}</h3>
+                        <small class="text-muted">Awaiting review</small>
+                    </div>
+                    <div class="icon-shape bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-hand-holding-usd fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-2">
+                            <i class="fas fa-coins me-1"></i>Total Amount
+                        </span>
+                        <h3 class="text-primary mb-1">
+                            KSh {{ pending_loans|dictsortreversed:"amount"|first|default:0|floatformat:2 }}
+                        </h3>
+                        <small class="text-muted">Sum of all pending loans</small>
+                    </div>
+                    <div class="icon-shape bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-coins fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 mb-2">
+                            <i class="fas fa-users me-1"></i>Applicants
+                        </span>
+                        <h3 class="text-info mb-1">{{ pending_loans|length }}</h3>
+                        <small class="text-muted">Members waiting</small>
+                    </div>
+                    <div class="icon-shape bg-info bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-users fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Loans Table -->
+<div class="card border-0 shadow">
+    <div class="card-header bg-white py-3">
+        <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0">
+                <i class="fas fa-list text-warning me-2"></i>All Pending Loan Applications
+            </h5>
+            <span class="badge bg-warning px-3 py-2">{{ pending_loans.count }} Pending</span>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        {% if pending_loans %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">#</th>
+                        <th>Member</th>
+                        <th>Amount</th>
+                        <th>Interest</th>
+                        <th>Purpose</th>
+                        <th>Period</th>
+                        <th>Applied</th>
+                        <th class="pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in pending_loans %}
+                    <tr>
+                        <td class="ps-4">{{ forloop.counter }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="fas fa-user text-primary"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ loan.member.get_full_name|default:loan.member.username }}</strong>
+                                    <small class="d-block text-muted">{{ loan.member.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-bold">KSh {{ loan.amount|floatformat:2 }}</td>
+                        <td>{{ loan.interest_rate }}%</td>
+                        <td>
+                            <span data-bs-toggle="tooltip" title="{{ loan.purpose }}">
+                                {{ loan.purpose|truncatechars:30 }}
+                            </span>
+                        </td>
+                        <td>{{ loan.repayment_period_months }} months</td>
+                        <td>
+                            <small>{{ loan.created_at|date:"M d, Y" }}</small><br>
+                            <small class="text-muted">{{ loan.created_at|timesince }} ago</small>
+                        </td>
+                        <td class="pe-4">
+                            <a href="{% url 'approve_loan' loan.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Review
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5 class="text-muted">No Pending Loans</h5>
+            <p class="text-muted mb-0">All loan applications have been processed.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>Loan Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="loanChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-0 shadow">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock text-warning me-2"></i>Waiting Time
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <div class="display-1 text-warning mb-3">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <h3>Average Wait Time</h3>
+                    <p class="text-muted">Most loans are reviewed within 24 hours</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data container - NO JAVASCRIPT HERE, ONLY DJANGO -->
+<div id="loan-data" 
+     data-has-loans="{% if pending_loans %}true{% else %}false{% endif %}"
+     data-amounts="[{% for loan in pending_loans %}{{ loan.amount|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]"
+     data-purposes="[{% for loan in pending_loans %}&quot;{{ loan.purpose|escapejs|truncatechars:15 }}&quot;{% if not forloop.last %},{% endif %}{% endfor %}]"
+     style="display: none;"></div>
+
+<!-- Chart.js Script - PURE JAVASCRIPT, NO DJANGO TAGS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get data from HTML attributes - PURE JS
+    const dataContainer = document.getElementById('loan-data');
+    
+    if (!dataContainer) return;
+    
+    const hasLoans = dataContainer.dataset.hasLoans === 'true';
+    const chartCanvas = document.getElementById('loanChart');
+    
+    if (!chartCanvas) return;
+    
+    if (hasLoans) {
+        // Parse the JSON strings
+        try {
+            const amounts = JSON.parse(dataContainer.dataset.amounts || '[]');
+            const purposes = JSON.parse(dataContainer.dataset.purposes || '[]');
+            
+            if (amounts.length > 0) {
+                new Chart(chartCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: purposes,
+                        datasets: [{
+                            label: 'Loan Amount (KSh)',
+                            data: amounts,
+                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                            borderColor: 'rgba(255, 193, 7, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error parsing loan data:', e);
+        }
+    } else {
+        // Show empty state
+        chartCanvas.parentElement.innerHTML = 
+            '<div class="text-center py-5"><i class="fas fa-check-circle fa-3x text-success mb-3"></i><h5 class="text-muted">No Pending Loans</h5><p class="text-muted mb-0">All loan applications have been processed.</p></div>';
+    }
+});
+</script>
+<style>
+.icon-shape {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Hover effect */
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 193, 7, 0.02);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .icon-shape {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .icon-shape i {
+        font-size: 1.2rem;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+}
+</style>
+{% endblock %}

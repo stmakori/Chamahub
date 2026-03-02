@@ -1,0 +1,85 @@
+DEBUG 2026-02-28 12:30:00,346 views_blockchain 24112 131981660649152 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-02-28 12:30:00,347 views_blockchain 24112 131981660649152 Transaction Hash: 18045e70bec3c26d4d41d7c2ee4791e1fa8795fd6086a8b960eac494268f63b5  |  User: dat
+DEBUG 2026-02-28 12:30:00,351 views_blockchain 24112 131981660649152 Found transaction in database: id=13
+DEBUG 2026-02-28 12:30:00,355 views_blockchain 24112 131981660649152 Found source object: Contribution
+INFO 2026-02-28 12:30:00,356 stellar 24112 131981660649152 🌐 Using Stellar TESTNET
+INFO 2026-02-28 12:30:00,362 stellar 24112 131981660649152 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 12:30:00,362 stellar 24112 131981660649152 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 12:30:02,839 views_blockchain 24112 131981660649152 Verified on Stellar: True
+INFO 2026-02-28 13:04:46,024 stellar 26353 125499372185280 🌐 Using Stellar TESTNET
+INFO 2026-02-28 13:04:46,041 stellar 26353 125499372185280 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 13:04:46,042 stellar 26353 125499372185280 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 13:05:03,730 stellar 26353 125499388970688 🌐 Using Stellar TESTNET
+INFO 2026-02-28 13:05:03,731 stellar 26353 125499388970688 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 13:05:03,731 stellar 26353 125499388970688 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 13:05:05,950 stellar 26353 125499388970688 ✅ Retrieved account info for GBR7BTOIF3...
+INFO 2026-02-28 13:05:13,689 stellar 26353 125499372185280 ✅ Retrieved account info for GBR7BTOIF3...
+DEBUG 2026-02-28 13:05:30,152 views_blockchain 26353 125499388970688 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-02-28 13:05:30,153 views_blockchain 26353 125499388970688 Transaction Hash: ab5a5f9edf7de14dbef74383312565443409fc99c82597fad2da728591e4b270  |  User: korrie
+DEBUG 2026-02-28 13:05:30,156 views_blockchain 26353 125499388970688 Found transaction in database: id=15
+DEBUG 2026-02-28 13:05:30,158 views_blockchain 26353 125499388970688 Found source object: Repayment
+INFO 2026-02-28 13:05:30,158 stellar 26353 125499388970688 🌐 Using Stellar TESTNET
+INFO 2026-02-28 13:05:30,159 stellar 26353 125499388970688 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 13:05:30,159 stellar 26353 125499388970688 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 13:05:31,553 views_blockchain 26353 125499388970688 Verified on Stellar: True
+DEBUG 2026-02-28 13:07:27,097 views_blockchain 26353 125499414148800 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-02-28 13:07:27,098 views_blockchain 26353 125499414148800 Transaction Hash: ab5a5f9edf7de14dbef74383312565443409fc99c82597fad2da728591e4b270  |  User: korrie
+DEBUG 2026-02-28 13:07:27,100 views_blockchain 26353 125499414148800 Found transaction in database: id=15
+DEBUG 2026-02-28 13:07:27,102 views_blockchain 26353 125499414148800 Found source object: Repayment
+INFO 2026-02-28 13:07:27,102 stellar 26353 125499414148800 🌐 Using Stellar TESTNET
+INFO 2026-02-28 13:07:27,103 stellar 26353 125499414148800 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 13:07:27,103 stellar 26353 125499414148800 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 13:07:28,870 views_blockchain 26353 125499414148800 Verified on Stellar: True
+INFO 2026-02-28 14:35:36,530 stellar 26353 125499495937728 🌐 Using Stellar TESTNET
+INFO 2026-02-28 14:35:37,769 stellar 26353 125499495937728 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 14:35:37,800 stellar 26353 125499495937728 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 14:35:53,519 stellar 26353 125499495937728 ✅ Transaction recorded on Stellar: ae7bc4f9f290c6b2448b8dc9b5665b7066b5f0187c0668890ea1f728299eb748 - CONTRIB:39:2000
+INFO 2026-02-28 14:35:53,961 stellar_recorder 26353 125499495937728 ✅ contribution #39 recorded on Stellar: ae7bc4f9f290c6b2448b8dc9b5665b7066b5f0187c0668890ea1f728299eb748
+INFO 2026-02-28 14:36:02,015 stellar 26353 125499495937728 🌐 Using Stellar TESTNET
+INFO 2026-02-28 14:36:02,016 stellar 26353 125499495937728 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 14:36:02,016 stellar 26353 125499495937728 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 14:36:03,853 stellar 26353 125499495937728 ✅ Retrieved account info for GBR7BTOIF3...
+DEBUG 2026-02-28 14:36:08,920 views_blockchain 26353 125499495937728 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-02-28 14:36:08,920 views_blockchain 26353 125499495937728 Transaction Hash: ae7bc4f9f290c6b2448b8dc9b5665b7066b5f0187c0668890ea1f728299eb748  |  User: korrie
+DEBUG 2026-02-28 14:36:08,925 views_blockchain 26353 125499495937728 Found transaction in database: id=16
+DEBUG 2026-02-28 14:36:08,935 views_blockchain 26353 125499495937728 Found source object: Contribution
+INFO 2026-02-28 14:36:08,936 stellar 26353 125499495937728 🌐 Using Stellar TESTNET
+INFO 2026-02-28 14:36:08,936 stellar 26353 125499495937728 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 14:36:08,937 stellar 26353 125499495937728 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 14:36:10,089 views_blockchain 26353 125499495937728 Verified on Stellar: True
+INFO 2026-02-28 14:36:45,117 stellar 26353 125499495937728 🌐 Using Stellar TESTNET
+INFO 2026-02-28 14:36:45,118 stellar 26353 125499495937728 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 14:36:45,119 stellar 26353 125499495937728 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 14:36:50,591 views_blockchain 26353 125499495937728 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-02-28 14:36:50,591 views_blockchain 26353 125499495937728 Transaction Hash: ae7bc4f9f290c6b2448b8dc9b5665b7066b5f0187c0668890ea1f728299eb748  |  User: dat
+DEBUG 2026-02-28 14:36:50,596 views_blockchain 26353 125499495937728 Found transaction in database: id=16
+DEBUG 2026-02-28 14:36:50,599 views_blockchain 26353 125499495937728 Found source object: Contribution
+INFO 2026-02-28 14:36:50,599 stellar 26353 125499495937728 🌐 Using Stellar TESTNET
+INFO 2026-02-28 14:36:50,600 stellar 26353 125499495937728 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 14:36:50,600 stellar 26353 125499495937728 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 14:36:51,808 views_blockchain 26353 125499495937728 Verified on Stellar: True
+INFO 2026-02-28 14:37:27,239 stellar 26353 125499495937728 🌐 Using Stellar TESTNET
+INFO 2026-02-28 14:37:27,240 stellar 26353 125499495937728 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 14:37:27,240 stellar 26353 125499495937728 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 14:37:28,364 stellar 26353 125499495937728 ✅ Retrieved account info for GBR7BTOIF3...
+INFO 2026-02-28 16:44:53,443 stellar 26353 125498801776320 🌐 Using Stellar TESTNET
+INFO 2026-02-28 16:44:53,967 stellar 26353 125498801776320 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 16:44:53,967 stellar 26353 125498801776320 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 16:45:01,001 stellar 26353 125498801776320 ✅ Transaction recorded on Stellar: 269059c2d2d7b181005f5acb14325f08b7da5031238c1a797265eaeebe2571d6 - CONTRIB:40:50
+INFO 2026-02-28 16:45:01,307 stellar_recorder 26353 125498801776320 ✅ contribution #40 recorded on Stellar: 269059c2d2d7b181005f5acb14325f08b7da5031238c1a797265eaeebe2571d6
+INFO 2026-02-28 16:45:10,433 stellar 26353 125498776598208 🌐 Using Stellar TESTNET
+INFO 2026-02-28 16:45:10,434 stellar 26353 125498776598208 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 16:45:10,435 stellar 26353 125498776598208 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 16:45:12,151 stellar 26353 125498776598208 ✅ Retrieved account info for GBR7BTOIF3...
+INFO 2026-02-28 16:45:14,529 stellar 26353 125498776598208 🌐 Using Stellar TESTNET
+INFO 2026-02-28 16:45:14,530 stellar 26353 125498776598208 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 16:45:14,530 stellar 26353 125498776598208 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-02-28 16:45:16,531 stellar 26353 125498776598208 ✅ Retrieved account info for GBR7BTOIF3...
+DEBUG 2026-02-28 16:45:23,717 views_blockchain 26353 125498801776320 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-02-28 16:45:23,717 views_blockchain 26353 125498801776320 Transaction Hash: 269059c2d2d7b181005f5acb14325f08b7da5031238c1a797265eaeebe2571d6  |  User: korrie
+DEBUG 2026-02-28 16:45:23,720 views_blockchain 26353 125498801776320 Found transaction in database: id=17
+DEBUG 2026-02-28 16:45:23,721 views_blockchain 26353 125498801776320 Found source object: Contribution
+INFO 2026-02-28 16:45:23,721 stellar 26353 125498801776320 🌐 Using Stellar TESTNET
+INFO 2026-02-28 16:45:23,722 stellar 26353 125498801776320 🔐 Successfully decrypted Stellar secret key
+INFO 2026-02-28 16:45:23,723 stellar 26353 125498801776320 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-02-28 16:45:27,354 views_blockchain 26353 125498801776320 Verified on Stellar: True

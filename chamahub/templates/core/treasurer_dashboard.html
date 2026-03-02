@@ -1,241 +1,801 @@
 {% extends 'core/base.html' %}
+{% load stellar_tags %}
 
-{% block title %}Treasurer Dashboard - ChamaHub{% endblock %}
+
+{% block title %}Treasurer Dashboard — ChamaHub{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h2 class="mb-4">
-            <i class="fas fa-crown"></i> Treasurer Dashboard
-            <small class="text-muted">Welcome, {{ user.get_full_name|default:user.username }}!</small>
-        </h2>
+<style>
+  /* Escape base container so sidebar spans full viewport */
+  main.container {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  :root {
+    --primary: #2c3e50;
+    --primary-dark: #1e2b37;
+    --sidebar-width: 280px;
+  }
+
+  body { display: flex; min-height: 100vh; background: #f4f6f9; }
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-header h3 { margin:0; font-weight:700; display:flex; align-items:center; gap:.5rem; }
+  .sidebar-header h3 i { color: #ffc107; }
+  .treasurer-profile { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,.1); }
+  .profile-card { background:rgba(255,255,255,.1); border-radius:10px; padding:1.25rem; }
+  .profile-avatar {
+    width:60px; height:60px;
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:1rem;
+  }
+  .profile-avatar i { font-size:2rem; color:white; }
+  .profile-info h5 { margin:0; font-weight:600; }
+  .profile-info .role-badge {
+    background:rgba(255,255,255,.2); color:white;
+    padding:.25rem .75rem; border-radius:20px; font-size:.75rem;
+  }
+  .profile-stats { margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,.1); }
+  .stat-value { font-size:1.25rem; font-weight:700; display:block; }
+  .stat-label { font-size:.7rem; opacity:.7; }
+
+  .sidebar-nav { padding:1.5rem 0; }
+  .nav-section-title {
+    padding:0 1.5rem; margin-bottom:.5rem;
+    font-size:.7rem; text-transform:uppercase; letter-spacing:1px; opacity:.5;
+  }
+  .sidebar .nav-item {
+    padding:.75rem 1.5rem; display:flex; align-items:center; gap:.75rem;
+    color:rgba(255,255,255,.8); text-decoration:none; transition:all .3s ease;
+    border-left: 3px solid transparent;
+  }
+  .sidebar .nav-item:hover { background:rgba(255,255,255,.1); color:white; }
+  .sidebar .nav-item.active {
+    background:rgba(255,255,255,.15); color:white;
+    border-left-color: #ffc107;
+  }
+  .sidebar .nav-item .nav-badge {
+    margin-left:auto; background:#ffc107; color:var(--primary-dark);
+    font-size:.7rem; padding:.25rem .5rem; border-radius:10px; font-weight:700;
+  }
+
+  /* Logout form styled to match nav-item */
+  .sidebar-logout-form { margin:0; padding:0; }
+  .sidebar-logout-btn {
+    width:100%; padding:.75rem 1.5rem;
+    display:flex; align-items:center; gap:.75rem;
+    color:rgba(255,255,255,.8); background:none; border:none;
+    border-left:3px solid transparent;
+    cursor:pointer; text-align:left; transition:all .3s ease;
+    font-size:1rem;
+  }
+  .sidebar-logout-btn:hover { background:rgba(255,255,255,.1); color:white; }
+
+  /* ── Main Content ───────────────────────────────────────── */
+  .main-content { margin-left:var(--sidebar-width); flex:1; min-height:100vh; }
+  .top-header {
+    height:70px; background:white;
+    box-shadow:0 2px 4px rgba(0,0,0,.05);
+    padding:0 2rem; display:flex; align-items:center;
+    justify-content:space-between; position:sticky; top:0; z-index:900;
+  }
+  .menu-toggle { display:none; background:none; border:none; font-size:1.5rem; color:#6c757d; cursor:pointer; }
+  .page-title h1 { font-size:1.5rem; font-weight:600; margin:0; }
+  .page-title p { margin:0; font-size:.8rem; color:#6c757d; }
+  .header-search input {
+    padding:.5rem 1rem; border:1px solid #dee2e6;
+    border-radius:20px; width:250px;
+  }
+  .header-search input:focus { outline:none; border-color:var(--primary); }
+  .content-area { padding:2rem; }
+
+  /* ── Stat Cards ─────────────────────────────────────────── */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; margin-bottom:2rem; }
+  .stat-card {
+    background:white; border-radius:12px; padding:1.5rem;
+    box-shadow:0 2px 4px rgba(0,0,0,.05);
+    display:flex; align-items:center; justify-content:space-between;
+    transition:all .3s ease;
+  }
+  .stat-card:hover { transform:translateY(-5px); box-shadow:0 8px 16px rgba(0,0,0,.1); }
+  .stat-info h3 { font-size:.9rem; color:#6c757d; margin-bottom:.5rem; }
+  .stat-number { font-size:2rem; font-weight:700; margin-bottom:.25rem; line-height:1.2; }
+  .stat-change { font-size:.8rem; color:#6c757d; }
+  .stat-change.positive { color:#28a745; }
+  .stat-change.negative { color:#dc3545; }
+  .stat-icon { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; }
+  .stat-icon.primary   { background:rgba(52,152,219,.1); color:#3498db; }
+  .stat-icon.success   { background:rgba(40,167,69,.1);  color:#28a745; }
+  .stat-icon.warning   { background:rgba(255,193,7,.1);  color:#ffc107; }
+  .stat-icon.info      { background:rgba(23,162,184,.1); color:#17a2b8; }
+  .stat-icon.blockchain{ background:rgba(44,62,80,.1);   color:#2c3e50; }
+
+  /* ── Quick Actions ──────────────────────────────────────── */
+  .quick-actions {
+    background:white; border-radius:12px; padding:1.5rem;
+    margin-bottom:2rem; box-shadow:0 2px 4px rgba(0,0,0,.05);
+  }
+  .section-title { display:flex; align-items:center; margin-bottom:1.5rem; }
+  .section-title h2 { font-size:1.2rem; font-weight:600; margin:0; flex:1; }
+  .actions-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; }
+  .action-card {
+    background:#f8f9fa; border-radius:8px; padding:1rem;
+    text-align:center; text-decoration:none; color:#343a40;
+    transition:all .3s ease; border:2px solid transparent;
+  }
+  .action-card:hover {
+    transform:translateY(-3px); border-color:var(--primary);
+    background:white; box-shadow:0 4px 8px rgba(0,0,0,.1); color:#343a40;
+  }
+  .action-card i { font-size:2rem; margin-bottom:.5rem; display:block; }
+  .action-card span { display:block; font-weight:600; }
+  .action-card small { color:#6c757d; font-size:.8rem; }
+
+  /* ── Charts ─────────────────────────────────────────────── */
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+  .chart-card { background:white; border-radius:12px; padding:1.5rem; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+  .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+  .chart-container { position:relative; height:300px; width:100%; }
+
+  /* ── Tables ─────────────────────────────────────────────── */
+  .section-card {
+    background:white; border-radius:12px; margin-bottom:2rem;
+    box-shadow:0 2px 4px rgba(0,0,0,.05); overflow:hidden;
+  }
+  .section-card .card-header {
+    padding:1.5rem; border-bottom:1px solid #dee2e6;
+    display:flex; justify-content:space-between; align-items:center;
+    background:white;
+  }
+  .section-card .card-header h3 { font-size:1.1rem; font-weight:600; margin:0; }
+  .data-table { width:100%; border-collapse:collapse; }
+  .data-table th { text-align:left; padding:1rem; background:#f8f9fa; font-weight:600; }
+  .data-table td { padding:1rem; border-bottom:1px solid #dee2e6; vertical-align:middle; }
+  .data-table tbody tr:hover { background:#f8f9fa; }
+  .member-info { display:flex; align-items:center; gap:.75rem; }
+  .member-avatar {
+    width:40px; height:40px; background:#e9ecef;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .empty-state { text-align:center; padding:3rem; color:#6c757d; }
+  .empty-state i { font-size:3rem; margin-bottom:1rem; opacity:.3; }
+
+  /* ── Export Modal ───────────────────────────────────────── */
+  .custom-modal {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.5); z-index:2000;
+    align-items:center; justify-content:center;
+  }
+  .custom-modal.active { display:flex; }
+  .custom-modal-content {
+    background:white; border-radius:12px;
+    width:90%; max-width:500px; padding:2rem;
+  }
+  .custom-modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+  .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; }
+  .export-options { display:flex; flex-direction:column; gap:1rem; }
+  .export-option {
+    padding:1rem; border:1px solid #dee2e6; border-radius:8px;
+    text-decoration:none; color:#343a40;
+    display:flex; align-items:center; gap:1rem; transition:all .3s ease;
+  }
+  .export-option:hover { background:#f8f9fa; border-color:var(--primary); color:#343a40; }
+  .export-option i { font-size:1.5rem; }
+  .export-option.pdf i   { color:#dc3545; }
+  .export-option.excel i { color:#28a745; }
+  .export-option.csv i   { color:#17a2b8; }
+  .export-option.chain i { color:#2c3e50; }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 992px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.active { transform:translateX(0); }
+    .main-content { margin-left:0; }
+    .menu-toggle { display:block; }
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .actions-grid { grid-template-columns:repeat(2,1fr); }
+    .charts-row { grid-template-columns:1fr; }
+  }
+  @media (max-width: 576px) {
+    .stats-grid { grid-template-columns:1fr; }
+    .actions-grid { grid-template-columns:1fr; }
+  }
+
+  @media print {
+    .sidebar, .top-header, .quick-actions { display:none !important; }
+    .main-content { margin-left:0; }
+    .stat-card, .section-card { box-shadow:none !important; border:1px solid #ddd !important; }
+  }
+</style>
+
+{# ── Inject chart data safely from Django context ── #}
+{{ monthly_chart_data|json_script:"monthly-chart-data" }}
+
+{# ================================================================ #}
+{# Sidebar                                                           #}
+{# ================================================================ #}
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3><i class="fas fa-crown"></i>ChamaHub</h3>
+  </div>
+
+  <div class="treasurer-profile">
+    <div class="profile-card">
+      <div class="d-flex align-items-center">
+        <div class="profile-avatar">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="profile-info">
+          <h5>{{ user.get_full_name|default:user.username }}</h5>
+          <span class="role-badge">Treasurer</span>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="row text-center">
+          <div class="col-4">
+            <span class="stat-value">{{ total_members }}</span>
+            <span class="stat-label">Members</span>
+          </div>
+          <div class="col-4">
+            <span class="stat-value">{{ pending_loans.count }}</span>
+            <span class="stat-label">Loans</span>
+          </div>
+          <div class="col-4">
+            <span class="stat-value">{{ total_pending_payments|default:0 }}</span>
+            <span class="stat-label">Payments</span>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section-title">Main</div>
+    <a href="#" class="nav-item active" data-section="all">
+      <i class="fas fa-tachometer-alt"></i>Dashboard
+    </a>
+    <a href="{% url 'treasurer_payments' %}" class="nav-item">
+      <i class="fas fa-credit-card"></i>Payments
+      {% if total_pending_payments > 0 %}
+        <span class="nav-badge">{{ total_pending_payments }}</span>
+      {% endif %}
+    </a>
+    <a href="#" class="nav-item" data-section="loans">
+      <i class="fas fa-hand-holding-usd"></i>Loans
+      {% if pending_loans.count > 0 %}
+        <span class="nav-badge">{{ pending_loans.count }}</span>
+      {% endif %}
+    </a>
+    <a href="#" class="nav-item" data-section="members">
+      <i class="fas fa-users"></i>Members
+    </a>
+
+    <div class="nav-section-title mt-3">Reports</div>
+    <a href="{% url 'blockchain_dashboard' %}" class="nav-item">
+      <i class="fas fa-link"></i>Blockchain
+    </a>
+    <a href="#" class="nav-item" onclick="openExportModal(); return false;">
+      <i class="fas fa-download"></i>Exports
+    </a>
+
+    <div class="nav-section-title mt-3">Account</div>
+    <a href="{% url 'dashboard' %}" class="nav-item">
+      <i class="fas fa-user"></i>Member View
+    </a>
+    {# ✅ POST logout — Django 4.1+ compatible #}
+    <form method="post" action="{% url 'logout' %}" class="sidebar-logout-form no-spinner">
+      {% csrf_token %}
+      <button type="submit" class="sidebar-logout-btn">
+        <i class="fas fa-sign-out-alt"></i>Logout
+      </button>
+    </form>
+  </div>
 </div>
 
-<!-- Group Balance Cards -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-coins fa-2x text-primary mb-2"></i>
-                <h5 class="card-title">Group Balance</h5>
-                <h3 class="{% if group_balance >= 0 %}balance-positive{% else %}balance-negative{% endif %}">
-                    KSh {{ group_balance|floatformat:2 }}
-                </h3>
-                <small class="text-muted">Total Contributions - Disbursed Loans</small>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-piggy-bank fa-2x text-success mb-2"></i>
-                <h5 class="card-title">Total Contributions</h5>
-                <h3 class="text-success">KSh {{ total_contributions|floatformat:2 }}</h3>
-                <small class="text-muted">All confirmed contributions</small>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-hand-holding-usd fa-2x text-warning mb-2"></i>
-                <h5 class="card-title">Disbursed Loans</h5>
-                <h3 class="text-warning">KSh {{ total_disbursed_loans|floatformat:2 }}</h3>
-                <small class="text-muted">Total amount disbursed</small>
-            </div>
-        </div>
-    </div>
-</div>
+{# ================================================================ #}
+{# Main Content                                                      #}
+{# ================================================================ #}
+<div class="main-content">
 
-<!-- Pending Loans for Approval -->
-{% if pending_loans %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-clock"></i> Pending Loan Approvals
-                    <span class="badge bg-warning">{{ pending_loans.count }}</span>
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Member</th>
-                                <th>Amount</th>
-                                <th>Interest Rate</th>
-                                <th>Purpose</th>
-                                <th>Period</th>
-                                <th>Date Applied</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for loan in pending_loans %}
-                            <tr>
-                                <td>{{ loan.member.get_full_name|default:loan.member.username }}</td>
-                                <td>KSh {{ loan.amount|floatformat:2 }}</td>
-                                <td>{{ loan.interest_rate }}%</td>
-                                <td>{{ loan.purpose|truncatechars:30 }}</td>
-                                <td>{{ loan.repayment_period_months }} months</td>
-                                <td>{{ loan.created_at|date:"M d, Y" }}</td>
-                                <td>
-                                    <a href="{% url 'approve_loan' loan.id %}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-eye"></i> Review
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+  {# Top Header #}
+  <div class="top-header">
+    <div class="d-flex align-items-center gap-3">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="page-title">
+        <h1>Treasurer Dashboard</h1>
+        <p>{{ current_date|date:"l, F j, Y" }}</p>
+      </div>
+    </div>
+    <div class="header-search">
+      <input type="text" placeholder="Search members or loans…" id="searchInput"
+             aria-label="Search members or loans">
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    {# ── Stat Cards ──────────────────────────────────────────── #}
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Group Balance</h3>
+          <div class="stat-number {% if group_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+            KSh {{ group_balance|floatformat:2 }}
+          </div>
+          <div class="stat-change {% if group_balance >= 0 %}positive{% else %}negative{% endif %}">
+            {% if group_balance >= 0 %}
+              <i class="fas fa-arrow-up me-1"></i>Healthy balance
+            {% else %}
+              <i class="fas fa-arrow-down me-1"></i>Deficit — review loans
+            {% endif %}
+          </div>
+        </div>
+        <div class="stat-icon primary"><i class="fas fa-coins"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Total Contributions</h3>
+          <div class="stat-number text-success">
+            KSh {{ total_contributions|floatformat:2 }}
+          </div>
+          <div class="stat-change positive">
+            <i class="fas fa-users me-1"></i>{{ total_members }} member{{ total_members|pluralize }}
+          </div>
+        </div>
+        <div class="stat-icon success"><i class="fas fa-piggy-bank"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Active Loans</h3>
+          <div class="stat-number text-warning">
+            KSh {{ total_disbursed_loans|floatformat:2 }}
+          </div>
+          <div class="stat-change {% if pending_loans.count > 0 %}negative{% else %}positive{% endif %}">
+            <i class="fas fa-clock me-1"></i>
+            {{ pending_loans.count }} pending approval{{ pending_loans.count|pluralize }}
+          </div>
+        </div>
+        <div class="stat-icon warning"><i class="fas fa-hand-holding-usd"></i></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <h3>Pending Payments</h3>
+          <div class="stat-number {% if total_pending_payments > 0 %}text-warning{% else %}text-success{% endif %}">
+            {{ total_pending_payments|default:0 }}
+          </div>
+          <div class="stat-change {% if total_pending_payments > 0 %}negative{% else %}positive{% endif %}">
+            <i class="fas fa-{% if total_pending_payments > 0 %}exclamation-circle{% else %}check-circle{% endif %} me-1"></i>
+            {% if total_pending_payments > 0 %}Require confirmation{% else %}All payments confirmed{% endif %}
+          </div>
+        </div>
+        <div class="stat-icon info"><i class="fas fa-credit-card"></i></div>
+      </div>
+
+    </div>
+
+    {# ── Quick Actions ────────────────────────────────────────── #}
+    <div class="quick-actions">
+      <div class="section-title">
+        <h2><i class="fas fa-bolt text-warning me-2"></i>Quick Actions</h2>
+      </div>
+      <div class="actions-grid">
+
+        <a href="{% url 'treasurer_payments' %}" class="action-card">
+          <i class="fas fa-check-circle text-success"></i>
+          <span>Confirm Payments</span>
+          {% if total_pending_payments > 0 %}
+            <small>{{ total_pending_payments }} pending</small>
+          {% else %}
+            <small>All clear</small>
+          {% endif %}
+        </a>
+
+        <a href="{% url 'pending_loans' %}" class="action-card">
+          <i class="fas fa-clock text-warning"></i>
+          <span>Review Loans</span>
+          {% if pending_loans.count > 0 %}
+            <small>{{ pending_loans.count }} pending</small>
+          {% else %}
+            <small>None pending</small>
+          {% endif %}
+        </a>
+
+        {# ✅ Blockchain quick action #}
+        <a href="{% url 'blockchain_dashboard' %}" class="action-card">
+          <i class="fas fa-link text-primary"></i>
+          <span>Blockchain</span>
+          <small>Explorer &amp; coverage</small>
+        </a>
+
+        <a href="#" class="action-card" onclick="openExportModal(); return false;">
+          <i class="fas fa-download text-info"></i>
+          <span>Export Data</span>
+          <small>CSV, PDF</small>
+        </a>
+
+        <a href="{% url 'dashboard' %}" class="action-card">
+          <i class="fas fa-chart-bar text-secondary"></i>
+          <span>Member View</span>
+          <small>Switch view</small>
+        </a>
+
+      </div>
+    </div>
+
+    {# ── Charts ───────────────────────────────────────────────── #}
+    <div class="charts-row">
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><i class="fas fa-chart-pie text-primary me-2"></i>Portfolio Distribution</h3>
+        </div>
+        <div class="chart-container" id="portfolioContainer">
+          <canvas id="portfolioChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>
+            <i class="fas fa-chart-line text-success me-2"></i>Monthly Activity
+          </h3>
+          <small class="text-muted">Last 6 months</small>
+        </div>
+        <div class="chart-container">
+          <canvas id="activityChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    {# ── Pending Loans ─────────────────────────────────────────── #}
+    <div class="section-card" id="loans-section">
+      <div class="card-header">
+        <h3><i class="fas fa-clock text-warning me-2"></i>Pending Loan Approvals</h3>
+        {% if pending_loans %}
+          <span class="badge bg-warning text-dark">{{ pending_loans.count }} Pending</span>
+        {% else %}
+          <span class="badge bg-success">All Clear</span>
+        {% endif %}
+      </div>
+
+      {% if pending_loans %}
+      <div class="table-responsive">
+        <table class="data-table" id="loansTable">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Amount</th>
+              <th>Interest</th>
+              <th>Purpose</th>
+              <th>Applied</th>
+              <th>Blockchain</th>{# ✅ #}
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for loan in pending_loans %}
+            <tr class="searchable-row">
+              <td>
+                <div class="member-info">
+                  <div class="member-avatar"><i class="fas fa-user text-muted"></i></div>
+                  <div>
+                    <strong>{{ loan.member.get_full_name|default:loan.member.username }}</strong><br>
+                    <small class="text-muted">{{ loan.member.email }}</small>
+                  </div>
                 </div>
-            </div>
-        </div>
+              </td>
+              <td><strong>KSh {{ loan.amount|floatformat:2 }}</strong></td>
+              <td>{{ loan.interest_rate }}%</td>
+              <td>{{ loan.purpose|truncatechars:30 }}</td>
+              <td>
+                <small>{{ loan.created_at|date:"M d, Y" }}</small><br>
+                <small class="text-muted">{{ loan.created_at|timesince }} ago</small>
+              </td>
+              <td>{% stellar_badge loan %}</td>{# ✅ #}
+              <td>
+                <a href="{% url 'approve_loan' loan.id %}"
+                   class="btn btn-sm btn-primary">
+                  <i class="fas fa-eye me-1"></i>Review
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-check-circle text-success"></i>
+        <h4>No Pending Loans</h4>
+        <p>All loan applications have been processed.</p>
+      </div>
+      {% endif %}
     </div>
-</div>
-{% endif %}
 
-<div class="row">
-    <!-- Recent Contributions -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-piggy-bank"></i> Recent Contributions
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if recent_contributions %}
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Member</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for contribution in recent_contributions %}
-                                <tr>
-                                    <td>{{ contribution.member.get_full_name|default:contribution.member.username }}</td>
-                                    <td>KSh {{ contribution.amount|floatformat:2 }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if contribution.status == 'confirmed' %}success{% elif contribution.status == 'pending' %}warning{% else %}danger{% endif %}">
-                                            {{ contribution.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ contribution.date|date:"M d, Y" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-muted">No recent contributions.</p>
-                {% endif %}
-            </div>
-        </div>
+    {# ── Member Balances ───────────────────────────────────────── #}
+    <div class="section-card" id="members-section">
+      <div class="card-header">
+        <h3><i class="fas fa-users text-primary me-2"></i>Member Balances</h3>
+        <span class="badge bg-primary">{{ member_balances|length }} Member{{ member_balances|length|pluralize }}</span>
+      </div>
+
+      {% if member_balances %}
+      <div class="table-responsive">
+        <table class="data-table" id="membersTable">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Contributions</th>
+              <th>Balance</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for md in member_balances %}
+            <tr class="searchable-row">
+              <td>
+                <div class="member-info">
+                  <div class="member-avatar"><i class="fas fa-user text-muted"></i></div>
+                  <div>
+                    <strong>{{ md.member.get_full_name|default:md.member.username }}</strong><br>
+                    <small class="text-muted">{{ md.member.email }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-{% if md.role == 'treasurer' %}primary{% elif md.role == 'chairperson' %}success{% else %}secondary{% endif %}">
+                  {{ md.role|title }}
+                </span>
+              </td>
+              <td class="text-success fw-bold">
+                KSh {{ md.total_contributions|default:md.balance|floatformat:2 }}
+              </td>
+              <td class="{% if md.balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                KSh {{ md.balance|floatformat:2 }}
+              </td>
+              <td>
+                <span class="badge bg-{% if md.balance >= 0 %}success{% else %}warning{% endif %}">
+                  {% if md.balance >= 0 %}Positive{% else %}Negative{% endif %}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h4>No Members Found</h4>
+      </div>
+      {% endif %}
     </div>
-    
-    <!-- Recent Repayments -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-credit-card"></i> Recent Repayments
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if recent_repayments %}
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Member</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for repayment in recent_repayments %}
-                                <tr>
-                                    <td>{{ repayment.loan.member.get_full_name|default:repayment.loan.member.username }}</td>
-                                    <td>KSh {{ repayment.amount|floatformat:2 }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if repayment.status == 'confirmed' %}success{% elif repayment.status == 'pending' %}warning{% else %}danger{% endif %}">
-                                            {{ repayment.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ repayment.date|date:"M d, Y" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-muted">No recent repayments.</p>
-                {% endif %}
-            </div>
-        </div>
+
+  </div>{# /content-area #}
+</div>{# /main-content #}
+
+{# ── Export Modal ─────────────────────────────────────────────── #}
+<div class="custom-modal" id="exportModal">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h3><i class="fas fa-download text-primary me-2"></i>Export Reports</h3>
+      <button class="modal-close" onclick="closeExportModal()" aria-label="Close">&times;</button>
     </div>
+    <div class="export-options">
+      <a href="#" class="export-option pdf">
+        <i class="fas fa-file-pdf"></i>
+        <div><strong>Financial Summary</strong><small class="d-block text-muted">PDF report</small></div>
+      </a>
+      <a href="#" class="export-option excel">
+        <i class="fas fa-file-excel"></i>
+        <div><strong>Member Balances</strong><small class="d-block text-muted">Excel spreadsheet</small></div>
+      </a>
+      <a href="#" class="export-option csv">
+        <i class="fas fa-file-csv"></i>
+        <div><strong>Transaction History</strong><small class="d-block text-muted">CSV file</small></div>
+      </a>
+      {# ✅ Blockchain export #}
+      <a href="{% url 'blockchain_dashboard' %}" class="export-option chain">
+        <i class="fas fa-link"></i>
+        <div>
+          <strong>Blockchain Transactions</strong>
+          <small class="d-block text-muted">On-chain verified records</small>
+        </div>
+      </a>
+    </div>
+  </div>
 </div>
 
-<!-- Member Balances -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-users"></i> Member Balances
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if member_balances %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Member</th>
-                                    <th>Role</th>
-                                    <th>Balance</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for member_data in member_balances %}
-                                <tr>
-                                    <td>{{ member_data.member.get_full_name|default:member_data.member.username }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if member_data.role == 'treasurer' %}primary{% elif member_data.role == 'chairperson' %}success{% else %}secondary{% endif %}">
-                                            {{ member_data.role|title }}
-                                        </span>
-                                    </td>
-                                    <td class="{% if member_data.balance >= 0 %}balance-positive{% else %}balance-negative{% endif %}">
-                                        KSh {{ member_data.balance|floatformat:2 }}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{% if member_data.balance >= 0 %}success{% else %}warning{% endif %}">
-                                            {% if member_data.balance >= 0 %}Positive{% else %}Negative{% endif %}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-muted">No member data available.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ── Read chart data injected by Django's json_script ──────────
+  const rawChartData = document.getElementById('monthly-chart-data');
+  const chartData    = rawChartData ? JSON.parse(rawChartData.textContent) : null;
+
+  const totalContributions = parseFloat('{{ total_contributions|default:"0"|escapejs }}') || 0;
+  const totalLoans         = parseFloat('{{ total_disbursed_loans|default:"0"|escapejs }}') || 0;
+  const totalInterest      = parseFloat('{{ total_interest|default:"0"|escapejs }}') || 0;
+
+  // ── Portfolio Distribution Chart ───────────────────────────────
+  const portfolioCtx = document.getElementById('portfolioChart')?.getContext('2d');
+  if (portfolioCtx) {
+    if (totalContributions === 0 && totalLoans === 0) {
+      // Zero state — show friendly message instead of an empty chart
+      document.getElementById('portfolioContainer').innerHTML =
+        '<div class="d-flex align-items-center justify-content-center h-100 text-muted">' +
+        '<div class="text-center"><i class="fas fa-chart-pie fa-3x opacity-25 mb-3"></i>' +
+        '<p>No financial data yet.</p></div></div>';
+    } else {
+      new Chart(portfolioCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Contributions', 'Loans Outstanding', 'Interest Earned'],
+          datasets: [{
+            data: [totalContributions, totalLoans, totalInterest],
+            backgroundColor: ['#28a745', '#ffc107', '#17a2b8'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}: KSh ${ctx.parsed.toLocaleString()}`
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // ── Monthly Activity Chart (real data from backend) ────────────
+  const activityCtx = document.getElementById('activityChart')?.getContext('2d');
+  if (activityCtx && chartData) {
+    new Chart(activityCtx, {
+      type: 'line',
+      data: {
+        labels: chartData.labels,
+        datasets: [
+          {
+            label: 'Contributions',
+            data: chartData.contributions,
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40,167,69,0.08)',
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: '#28a745',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'Repayments',
+            data: chartData.repayments,
+            borderColor: '#17a2b8',
+            backgroundColor: 'rgba(23,162,184,0.08)',
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: '#17a2b8',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: KSh ${ctx.parsed.y.toLocaleString()}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { callback: v => 'KSh ' + Number(v).toLocaleString() }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ── Live search — filters rows in whichever table is visible ───
+  document.getElementById('searchInput')?.addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.searchable-row').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = (!q || text.includes(q)) ? '' : 'none';
+    });
+  });
+
+  // ── Sidebar section navigation ─────────────────────────────────
+  const loansSection   = document.getElementById('loans-section');
+  const membersSection = document.getElementById('members-section');
+
+  document.querySelectorAll('.sidebar .nav-item[data-section]').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const section = this.dataset.section;
+
+      // Update active state
+      document.querySelectorAll('.sidebar .nav-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+
+      // Show/hide sections
+      if (section === 'all') {
+        if (loansSection)   loansSection.style.display   = '';
+        if (membersSection) membersSection.style.display = '';
+      } else if (section === 'loans') {
+        if (loansSection)   loansSection.style.display   = '';
+        if (membersSection) membersSection.style.display = 'none';
+        loansSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (section === 'members') {
+        if (loansSection)   loansSection.style.display   = 'none';
+        if (membersSection) membersSection.style.display = '';
+        membersSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ── Close modal on backdrop click ─────────────────────────────
+  document.getElementById('exportModal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeExportModal();
+  });
+
+});
+
+// ── Sidebar toggle ───────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('active');
+}
+
+// ── Export modal ─────────────────────────────────────────────────
+function openExportModal()  { document.getElementById('exportModal').classList.add('active'); }
+function closeExportModal() { document.getElementById('exportModal').classList.remove('active'); }
+</script>
+
 {% endblock %}

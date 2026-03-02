@@ -4,144 +4,532 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ChamaHub - Modern Chama Management System">
+    <meta name="theme-color" content="#2c3e50">
+    <!-- Add CSRF token meta tag for JavaScript access -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
     <title>{% block title %}ChamaHub - Chama Management System{% endblock %}</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+
+    <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
     <!-- Custom CSS -->
-    <link href="{% static 'css/chamahub.css' %}" rel="stylesheet">
-    
-    <style>
-        .navbar-brand {
-            font-weight: bold;
-            color: #2c3e50 !important;
-        }
-        .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: 1px solid rgba(0, 0, 0, 0.125);
-        }
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-        }
-        .btn-primary {
-            background-color: #2c3e50;
-            border-color: #2c3e50;
-        }
-        .btn-primary:hover {
-            background-color: #34495e;
-            border-color: #34495e;
-        }
-        .balance-positive {
-            color: #28a745;
-        }
-        .balance-negative {
-            color: #dc3545;
-        }
-        .status-pending {
-            color: #ffc107;
-        }
-        .status-confirmed {
-            color: #28a745;
-        }
-        .status-failed {
-            color: #dc3545;
-        }
-    </style>
-    
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-users"></i> ChamaHub
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
+
+<!-- Loading Spinner Overlay -->
+<div class="spinner-overlay" id="loadingSpinner">
+    <div class="spinner-content">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-white">Processing your request…</p>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-header bg-{{ message.tags }} text-white">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                <strong class="me-auto">ChamaHub</strong>
+                <small>just now</small>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">{{ message }}</div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand animate__animated animate__fadeIn" href="{% url 'home' %}">
+            <i class="fas fa-users"></i> ChamaHub
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                       href="{% url 'dashboard' %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'make_contribution' %}active{% endif %}"
+                       href="{% url 'make_contribution' %}">
+                        <i class="fas fa-plus-circle"></i> Contribute
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'apply_loan' %}active{% endif %}"
+                       href="{% url 'apply_loan' %}">
+                        <i class="fas fa-hand-holding-usd"></i> Apply Loan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'payment_status' %}active{% endif %}"
+                       href="{% url 'payment_status' %}">
+                        <i class="fas fa-credit-card"></i> Payments
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'blockchain_dashboard' or request.resolver_match.url_name == 'blockchain_tx_detail' %}active{% endif %}"
+                       href="{% url 'blockchain_dashboard' %}">
+                        <i class="fas fa-link"></i> Blockchain
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle"></i>
+                        {{ user.get_short_name|default:user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li>
+                            <h6 class="dropdown-header">
+                                <i class="fas fa-user me-2"></i>
+                                {{ user.get_full_name|default:user.username }}
+                            </h6>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="#"
+                               data-bs-toggle="modal" data-bs-target="#profileModal">
+                                <i class="fas fa-id-card me-2"></i>My Profile
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'make_contribution' %}">
-                                <i class="fas fa-plus-circle"></i> Contribute
+                        <li>
+                            <a class="dropdown-item" href="{% url 'payment_status' %}">
+                                <i class="fas fa-clock me-2"></i>Payment History
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'apply_loan' %}">
-                                <i class="fas fa-hand-holding-usd"></i> Apply Loan
+                        <li>
+                            <a class="dropdown-item" href="{% url 'blockchain_dashboard' %}">
+                                <i class="fas fa-link me-2"></i>Blockchain Explorer
                             </a>
                         </li>
-                    {% endif %}
-                </ul>
-                
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> {{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">
-                                <i class="fas fa-sign-in-alt"></i> Login
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <!-- SOLUTION 3: Proper POST logout form with CSRF token -->
+                            <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display: none;">
+                                {% csrf_token %}
+                            </form>
+                            <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">
-                                <i class="fas fa-user-plus"></i> Register
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}"
+                       href="{% url 'login' %}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'register' %}active{% endif %}"
+                       href="{% url 'register' %}">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Mobile FAB -->
+{% if user.is_authenticated %}
+<div class="fab-container d-md-none">
+    <button class="btn fab" onclick="toggleQuickActions()">
+        <i class="fas fa-plus"></i>
+    </button>
+    <div class="fab-actions" id="fabActions">
+        <a href="{% url 'make_contribution' %}" class="fab-action bg-success">
+            <i class="fas fa-plus-circle"></i>
+            <span>Contribute</span>
+        </a>
+        <a href="{% url 'apply_loan' %}" class="fab-action bg-warning">
+            <i class="fas fa-hand-holding-usd"></i>
+            <span>Apply Loan</span>
+        </a>
+        <a href="{% url 'blockchain_dashboard' %}" class="fab-action bg-info">
+            <i class="fas fa-link"></i>
+            <span>Blockchain</span>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Main Content -->
+<main class="container mt-4 animate__animated animate__fadeIn">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="text-center text-white py-4 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 text-md-start">
+                <i class="fas fa-users me-2"></i>ChamaHub &copy; 2024
+            </div>
+            <div class="col-md-4 text-md-center">
+                <small>
+                    Built with <i class="fas fa-heart text-danger"></i> for Chamas
+                    &nbsp;·&nbsp;
+                    <a href="{% url 'blockchain_dashboard' %}" class="text-white text-decoration-none">
+                        <i class="fas fa-link me-1"></i>Blockchain Secured
+                    </a>
+                </small>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="#" class="text-white me-3"
+                   data-bs-toggle="modal" data-bs-target="#helpModal">
+                    <i class="fas fa-question-circle"></i> Help
+                </a>
+                <a href="#" class="text-white"
+                   data-bs-toggle="modal" data-bs-target="#contactModal">
+                    <i class="fas fa-envelope"></i> Contact
+                </a>
             </div>
         </div>
-    </nav>
+    </div>
+</footer>
 
-    <!-- Messages -->
-    {% if messages %}
-        <div class="container mt-3">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<!-- Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-id-card me-2"></i>My Profile
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-circle mx-auto mb-3">
+                        <span class="initials">
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                        </span>
+                    </div>
+                    <h5>{{ user.get_full_name }}</h5>
+                    <span class="badge bg-primary">
+                        {{ user.chama_profile.get_role_display }}
+                    </span>
                 </div>
-            {% endfor %}
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-user me-2"></i>
+                        <strong>Username:</strong> {{ user.username }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-envelope me-2"></i>
+                        <strong>Email:</strong> {{ user.email }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-phone me-2"></i>
+                        <strong>Phone:</strong>
+                        {{ user.chama_profile.phone_number|default:"Not set" }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-calendar me-2"></i>
+                        <strong>Joined:</strong>
+                        {{ user.chama_profile.joined_date|date:"M d, Y" }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-link me-2 text-primary"></i>
+                        <strong>Blockchain Transactions:</strong>
+                        <a href="{% url 'blockchain_dashboard' %}" class="ms-2 small">
+                            View in Explorer <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'blockchain_dashboard' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-link me-1"></i>My Blockchain Activity
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
         </div>
-    {% endif %}
+    </div>
+</div>
 
-    <!-- Main Content -->
-    <main class="container mt-4">
-        {% block content %}{% endblock %}
-    </main>
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Help Center
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Frequently Asked Questions</h6>
+                <div class="accordion mt-3" id="faqAccordion">
 
-    <!-- Footer -->
-    <footer class="bg-light text-center text-muted py-3 mt-5">
-        <div class="container">
-            <p>&copy; 2024 ChamaHub. Built with Django and integrated with Payhero for payments.</p>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq1">
+                                How do I make a contribution?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Click <strong>Contribute</strong> in the navigation, enter the amount,
+                                and follow the M-Pesa STK push instructions on your phone.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq2">
+                                How long does loan approval take?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Loans are typically reviewed within 24–48 hours by the treasurer.
+                                You'll be notified once a decision is made.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq3">
+                                How do I check my payment status?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Go to <strong>Payments</strong> in the navigation menu to see all
+                                your transactions and their current status.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq4">
+                                What is blockchain verification?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Every confirmed transaction is permanently recorded on the
+                                Stellar blockchain, giving you tamper-proof evidence of all
+                                contributions, loans, repayments, and withdrawals. Click
+                                <strong>Blockchain</strong> in the navigation to view your
+                                verified transactions and their on-chain links.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
-    </footer>
+    </div>
+</div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Contact Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2"></i>Contact Us
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm" class="no-spinner">
+                    <div class="mb-3">
+                        <label for="contactSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="contactSubject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactEmail" class="form-label">Your Email</label>
+                        <input type="email" class="form-control" id="contactEmail"
+                               value="{{ user.email }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const spinner = document.getElementById('loadingSpinner');
+
+    // ── Spinner logic ──────────────────────────────────────────
+    // Show spinner on form submit UNLESS:
+    //   (a) form has class "no-spinner"
+    //   (b) form is inside a Bootstrap .modal element
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            const insideModal   = form.closest('.modal') !== null;
+            const skipRequested = form.classList.contains('no-spinner');
+
+            if (spinner && !insideModal && !skipRequested) {
+                spinner.classList.add('show');
+            }
+        });
+    });
+
+    // ── Toast notifications ────────────────────────────────────
+    document.querySelectorAll('.toast').forEach(function (toastEl) {
+        new bootstrap.Toast(toastEl).show();
+    });
+
+    // ── Auto-dismiss alerts after 5 seconds ───────────────────
+    setTimeout(function () {
+        document.querySelectorAll('.alert').forEach(function (alert) {
+            try { new bootstrap.Alert(alert).close(); } catch (e) {}
+        });
+    }, 5000);
+
+    // ── Highlight active nav link by current URL ──────────────
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.nav-link[href]').forEach(function (link) {
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+
+    // ── Hide spinner if browser navigates back ─────────────────
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted && spinner) {
+            spinner.classList.remove('show');
+        }
+    });
+
+});
+
+// ── Mobile FAB toggle ────────────────────────────────────────
+function toggleQuickActions() {
+    document.getElementById('fabActions').classList.toggle('show');
+}
+
+// Close FAB when clicking outside it
+document.addEventListener('click', function (event) {
+    const fab     = document.querySelector('.fab-container');
+    const actions = document.getElementById('fabActions');
+    if (fab && !fab.contains(event.target) && actions?.classList.contains('show')) {
+        actions.classList.remove('show');
+    }
+});
+
+// ── Contact form submit ──────────────────────────────────────
+document.getElementById('contactForm')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+    modal.hide();
+    this.reset();
+
+    // Show success toast
+    const toastContainer = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="toast-header bg-success text-white">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong class="me-auto">ChamaHub</strong>
+            <small>just now</small>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            Message sent successfully! We'll get back to you soon.
+        </div>
+    `;
+    toastContainer.appendChild(toast);
+    new bootstrap.Toast(toast).show();
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+});
+
+// ── Additional CSRF protection for logout (just in case) ────
+// This ensures the CSRF token is always fresh
+(function() {
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
     
-    {% block extra_js %}{% endblock %}
+    // Update logout form CSRF token on page load
+    const logoutForm = document.getElementById('logout-form');
+    if (logoutForm) {
+        const csrfInput = logoutForm.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput) {
+            // You can update the token if needed, but Django handles this automatically
+            console.log('Logout form ready with CSRF protection');
+        }
+    }
+})();
+</script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>

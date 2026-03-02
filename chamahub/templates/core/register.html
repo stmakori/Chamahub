@@ -1,41 +1,72 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Register - ChamaHub{% endblock %}
+{% block title %}Join ChamaHub - Register{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
+        <!-- Registration Card -->
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-primary text-white py-3">
                 <h4 class="mb-0">
-                    <i class="fas fa-user-plus"></i> Join ChamaHub
+                    <i class="fas fa-user-plus me-2"></i>Join ChamaHub
                 </h4>
+                <p class="text-white-50 small mb-0">Create your account to get started</p>
             </div>
-            <div class="card-body">
-                <form method="post">
+            
+            <div class="card-body p-4">
+                <!-- Benefits Alert -->
+                <div class="alert alert-info d-flex align-items-center mb-4">
+                    <i class="fas fa-gift fa-2x me-3"></i>
+                    <div>
+                        <strong>Welcome to ChamaHub!</strong>
+                        <p class="mb-0 small">Start managing your chama contributions and loans today.</p>
+                    </div>
+                </div>
+
+                <form method="post" id="registerForm" novalidate>
                     {% csrf_token %}
                     
+                    <!-- Username Field -->
                     <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-                        {{ form.username }}
+                        <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-user text-primary me-2"></i>Username
+                        </label>
+                        <input type="text" 
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                               name="{{ form.username.name }}" 
+                               id="{{ form.username.id_for_label }}" 
+                               value="{{ form.username.value|default:'' }}"
+                               placeholder="Choose a username"
+                               required>
                         {% if form.username.errors %}
-                            <div class="text-danger">
+                            <div class="invalid-feedback">
                                 {% for error in form.username.errors %}
-                                    <small>{{ error }}</small>
+                                    {{ error }}
                                 {% endfor %}
                             </div>
+                        {% else %}
+                            <div class="form-text">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</div>
                         {% endif %}
                     </div>
                     
+                    <!-- Name Row -->
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
-                                {{ form.first_name }}
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-id-card text-primary me-2"></i>First Name
+                                </label>
+                                <input type="text" 
+                                       class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                                       name="{{ form.first_name.name }}" 
+                                       id="{{ form.first_name.id_for_label }}" 
+                                       value="{{ form.first_name.value|default:'' }}"
+                                       placeholder="Your first name">
                                 {% if form.first_name.errors %}
-                                    <div class="text-danger">
+                                    <div class="invalid-feedback">
                                         {% for error in form.first_name.errors %}
-                                            <small>{{ error }}</small>
+                                            {{ error }}
                                         {% endfor %}
                                     </div>
                                 {% endif %}
@@ -43,12 +74,19 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
-                                {{ form.last_name }}
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fas fa-id-card text-primary me-2"></i>Last Name
+                                </label>
+                                <input type="text" 
+                                       class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
+                                       name="{{ form.last_name.name }}" 
+                                       id="{{ form.last_name.id_for_label }}" 
+                                       value="{{ form.last_name.value|default:'' }}"
+                                       placeholder="Your last name">
                                 {% if form.last_name.errors %}
-                                    <div class="text-danger">
+                                    <div class="invalid-feedback">
                                         {% for error in form.last_name.errors %}
-                                            <small>{{ error }}</small>
+                                            {{ error }}
                                         {% endfor %}
                                     </div>
                                 {% endif %}
@@ -56,54 +94,326 @@
                         </div>
                     </div>
                     
+                    <!-- Email Field -->
                     <div class="mb-3">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                        {{ form.email }}
+                        <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-envelope text-primary me-2"></i>Email Address
+                        </label>
+                        <input type="email" 
+                               class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                               name="{{ form.email.name }}" 
+                               id="{{ form.email.id_for_label }}" 
+                               value="{{ form.email.value|default:'' }}"
+                               placeholder="you@example.com"
+                               required>
                         {% if form.email.errors %}
-                            <div class="text-danger">
+                            <div class="invalid-feedback">
                                 {% for error in form.email.errors %}
-                                    <small>{{ error }}</small>
+                                    {{ error }}
                                 {% endfor %}
                             </div>
+                        {% else %}
+                            <div class="form-text">We'll never share your email with anyone else.</div>
                         {% endif %}
                     </div>
                     
+                    <!-- Password Field -->
                     <div class="mb-3">
-                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
-                        {{ form.password1 }}
+                        <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-lock text-primary me-2"></i>Password
+                        </label>
+                        <input type="password" 
+                               class="form-control {% if form.password1.errors %}is-invalid{% endif %}" 
+                               name="{{ form.password1.name }}" 
+                               id="{{ form.password1.id_for_label }}" 
+                               placeholder="Create a strong password"
+                               required>
                         {% if form.password1.errors %}
-                            <div class="text-danger">
+                            <div class="invalid-feedback">
                                 {% for error in form.password1.errors %}
-                                    <small>{{ error }}</small>
+                                    {{ error }}
                                 {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="form-text">
+                                <ul class="small mb-0 ps-3">
+                                    <li>At least 8 characters</li>
+                                    <li>Can't be too similar to your personal info</li>
+                                    <li>Can't be a commonly used password</li>
+                                </ul>
                             </div>
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
-                        {{ form.password2 }}
+                    <!-- Confirm Password Field -->
+                    <div class="mb-4">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label fw-semibold">
+                            <i class="fas fa-lock text-primary me-2"></i>Confirm Password
+                        </label>
+                        <input type="password" 
+                               class="form-control {% if form.password2.errors %}is-invalid{% endif %}" 
+                               name="{{ form.password2.name }}" 
+                               id="{{ form.password2.id_for_label }}" 
+                               placeholder="Enter password again"
+                               required>
                         {% if form.password2.errors %}
-                            <div class="text-danger">
+                            <div class="invalid-feedback">
                                 {% for error in form.password2.errors %}
-                                    <small>{{ error }}</small>
+                                    {{ error }}
                                 {% endfor %}
                             </div>
+                        {% else %}
+                            <div class="form-text">Enter the same password as before, for verification.</div>
                         {% endif %}
                     </div>
                     
+                    <!-- Terms Checkbox -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label small" for="termsCheck">
+                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i> Create Account
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <span class="spinner-border spinner-border-sm d-none me-2" id="submitSpinner"></span>
+                            <i class="fas fa-user-plus me-2" id="submitIcon"></i>
+                            Create Account
                         </button>
                     </div>
                 </form>
                 
-                <div class="text-center mt-3">
-                    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                <!-- Login Link -->
+                <div class="text-center mt-4">
+                    <p class="mb-0">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="text-decoration-none fw-bold">
+                            Sign in here <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="d-flex justify-content-center gap-4 mt-4">
+            <div class="text-center">
+                <i class="fas fa-shield-alt text-success"></i>
+                <small class="d-block text-muted">Secure</small>
+            </div>
+            <div class="text-center">
+                <i class="fas fa-lock text-success"></i>
+                <small class="d-block text-muted">Encrypted</small>
+            </div>
+            <div class="text-center">
+                <i class="fas fa-clock text-success"></i>
+                <small class="d-block text-muted">Free to join</small>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-contract me-2"></i>Terms and Conditions
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Acceptance of Terms</h6>
+                <p class="small text-muted">By accessing and using ChamaHub, you agree to be bound by these Terms and Conditions.</p>
+                
+                <h6>2. User Accounts</h6>
+                <p class="small text-muted">You are responsible for maintaining the confidentiality of your account credentials.</p>
+                
+                <h6>3. Contributions and Loans</h6>
+                <p class="small text-muted">All financial transactions are subject to verification and approval by chama treasurers.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-shield-alt me-2"></i>Privacy Policy
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Data Collection</h6>
+                <p class="small text-muted">We collect only the information necessary to provide our services.</p>
+                
+                <h6>Data Protection</h6>
+                <p class="small text-muted">Your data is encrypted and never shared with third parties without consent.</p>
+                
+                <h6>M-Pesa Integration</h6>
+                <p class="small text-muted">Payment information is processed securely through Payhero's encrypted platform.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info text-white" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('registerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const submitIcon = document.getElementById('submitIcon');
+    const termsCheck = document.getElementById('termsCheck');
+    
+    // Form submission
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            // Check terms agreement
+            if (!termsCheck.checked) {
+                e.preventDefault();
+                alert('Please agree to the Terms and Conditions to continue');
+                return false;
+            }
+            
+            // Check if passwords match (basic client-side check)
+            const password1 = document.querySelector('[name="password1"]').value;
+            const password2 = document.querySelector('[name="password2"]').value;
+            
+            if (password1 !== password2) {
+                e.preventDefault();
+                alert('Passwords do not match');
+                return false;
+            }
+            
+            // Show loading spinner
+            submitBtn.disabled = true;
+            submitSpinner.classList.remove('d-none');
+            submitIcon.classList.add('d-none');
+            
+            return true;
+        });
+    }
+    
+    // Real-time password match indicator (optional)
+    const password1 = document.querySelector('[name="password1"]');
+    const password2 = document.querySelector('[name="password2"]');
+    
+    if (password1 && password2) {
+        password2.addEventListener('input', function() {
+            if (password1.value && password2.value) {
+                if (password1.value === password2.value) {
+                    password2.classList.add('is-valid');
+                    password2.classList.remove('is-invalid');
+                } else {
+                    password2.classList.remove('is-valid');
+                    password2.classList.add('is-invalid');
+                }
+            }
+        });
+    }
+    
+    // Username availability check (optional)
+    const usernameInput = document.querySelector('[name="username"]');
+    if (usernameInput) {
+        usernameInput.addEventListener('blur', function() {
+            const username = this.value;
+            if (username.length >= 3) {
+                // You could add an AJAX check here to see if username exists
+                // For now, just visual feedback
+                this.classList.add('is-valid');
+            }
+        });
+    }
+    
+    // Email validation
+    const emailInput = document.querySelector('[name="email"]');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email && emailPattern.test(email)) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else if (email) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    }
+});
+
+// Optional: Password strength indicator (simplified)
+function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.match(/[a-z]/)) strength++;
+    if (password.match(/[A-Z]/)) strength++;
+    if (password.match(/[0-9]/)) strength++;
+    if (password.match(/[^a-zA-Z0-9]/)) strength++;
+    
+    return strength;
+}
+
+// Add password strength indicator on input
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.querySelector('[name="password1"]');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const strength = checkPasswordStrength(this.value);
+            // Optional: Add visual indicator here
+        });
+    }
+});
+</script>
+
+<style>
+/* Minimal custom styles */
+.text-white-50 {
+    color: rgba(255,255,255,0.7) !important;
+}
+
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.15);
+}
+
+/* Validation styles */
+.form-control.is-valid {
+    border-color: var(--bs-success);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+    border-color: var(--bs-danger);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}
+</style>
 {% endblock %}

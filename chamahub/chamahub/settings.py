@@ -11,24 +11,44 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+# ======================================================================
+# SECURITY SETTINGS
+# ======================================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&p&#$5jau1hfvh)nr2xwp^=ws+=svy3^!-lnj3hvwmolx8bi&%'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-&p&#$5jau1hfvh)nr2xwp^=ws+=svy3^!-lnj3hvwmolx8bi&%')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
+
+# Security settings for production
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
 
 
-# Application definition
+# ======================================================================
+# APPLICATION DEFINITION
+# ======================================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,8 +91,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'chamahub.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# ======================================================================
+# DATABASE
+# ======================================================================
 
 DATABASES = {
     'default': {
@@ -81,10 +102,17 @@ DATABASES = {
     }
 }
 
+# For production, you might want to use PostgreSQL
+if os.getenv('DATABASE_URL'):
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL'))
+
+
+# ======================================================================
+# AUTHENTICATION & SESSIONS
+# ======================================================================
 
 # Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -100,42 +128,162 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
 # Login/Logout URLs
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Payhero Configuration
-PAYHERO_API_USERNAME = '8t08lod0MlivbkmuA2ub'
-PAYHERO_API_PASSWORD = 'K9WHwr1grYdYKCOhrfUGZ82BpyGLWtYyxLbpSK36'
-PAYHERO_ACCOUNT_ID = '3425'
-PAYHERO_BASIC_AUTH_TOKEN = 'Basic OHQwOGxvZDBNbGl2YmttdUEydWI6SzlXSHdyMWdyWWRZS0NPaHJmVUdaODJCcHlHTFd0WXl4TGJwU0szNg=='
-PAYHERO_BASE_URL = 'https://backend.payhero.co.ke'  # Correct Payhero API URL
-PAYHERO_CHANNEL_ID = '3905'  # Active Payhero channel ID
-PAYHERO_WEBHOOK_SECRET = 'your_webhook_secret_here'  # Set this in Payhero dashboard
+# Session settings (Fixes logout issues)
+SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Session expires when browser closes
+SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request to keep it alive
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'  # or 'Strict' for more security
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+# CSRF settings (Fixes CSRF token errors)
+CSRF_COOKIE_SECURE = False  # Set to True only in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access the cookie (needed for AJAX)
+CSRF_COOKIE_SAMESITE = 'Lax'  # or 'Strict' for more security
+CSRF_USE_SESSIONS = False  # Store CSRF token in cookie (default)
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'  # Default view for CSRF failures
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
+
+
+# ======================================================================
+# INTERNATIONALIZATION
+# ======================================================================
+
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'Africa/Nairobi'  # Changed to Nairobi time for Kenyan users
+USE_I18N = True
+USE_TZ = True
+
+
+# ======================================================================
+# STATIC & MEDIA FILES
+# ======================================================================
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # For production collection
+
+# Media files (Uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# ======================================================================
+# PAYHERO CONFIGURATION
+# ======================================================================
+
+PAYHERO_API_USERNAME = os.getenv('PAYHERO_API_USERNAME', '')
+PAYHERO_API_PASSWORD = os.getenv('PAYHERO_API_PASSWORD', '')
+PAYHERO_ACCOUNT_ID = os.getenv('PAYHERO_ACCOUNT_ID', '')
+PAYHERO_BASIC_AUTH_TOKEN = os.getenv('PAYHERO_BASIC_AUTH_TOKEN', '')
+PAYHERO_BASE_URL = os.getenv('PAYHERO_BASE_URL', 'https://backend.payhero.co.ke')
+PAYHERO_CHANNEL_ID = os.getenv('PAYHERO_CHANNEL_ID', '3905')
+PAYHERO_WEBHOOK_SECRET = os.getenv('PAYHERO_WEBHOOK_SECRET', 'your_webhook_secret_here')
+
+# Validate Payhero configuration
+if not PAYHERO_BASIC_AUTH_TOKEN:
+    print("WARNING: PAYHERO_BASIC_AUTH_TOKEN is not set in environment variables")
+
+
+# ======================================================================
+# STELLAR BLOCKCHAIN CONFIGURATION
+# ======================================================================
+
+STELLAR_NETWORK = os.getenv('STELLAR_NETWORK', 'TESTNET')
+STELLAR_PUBLIC_KEY = os.getenv('STELLAR_PUBLIC_KEY', '')
+STELLAR_SECRET_KEY = os.getenv('STELLAR_SECRET_KEY', '')
+STELLAR_RECOVERY_PHRASE = os.getenv('STELLAR_RECOVERY_PHRASE', '')
+STELLAR_HORIZON_URL = os.getenv('STELLAR_HORIZON_URL', 'https://horizon-testnet.stellar.org')
+STELLAR_ENCRYPTION_KEY = os.getenv('STELLAR_ENCRYPTION_KEY', '')
+
+# Feature flags for Stellar
+STELLAR_ENABLED = os.getenv('STELLAR_ENABLED', 'False') == 'True'
+STELLAR_AUTO_RECORD = os.getenv('STELLAR_AUTO_RECORD', 'True') == 'True'
+
+# Validate Stellar configuration if enabled
+if STELLAR_ENABLED:
+    if not STELLAR_PUBLIC_KEY:
+        raise ValueError('STELLAR_PUBLIC_KEY must be set when STELLAR_ENABLED=True')
+    if not STELLAR_SECRET_KEY:
+        raise ValueError('STELLAR_SECRET_KEY must be set when STELLAR_ENABLED=True')
+    if not STELLAR_ENCRYPTION_KEY:
+        raise ValueError('STELLAR_ENCRYPTION_KEY must be set when STELLAR_ENABLED=True')
+    
+    # Set the correct horizon URL based on network
+    if STELLAR_NETWORK == 'PUBLIC':
+        STELLAR_HORIZON_URL = 'https://horizon.stellar.org'
+    else:
+        STELLAR_HORIZON_URL = 'https://horizon-testnet.stellar.org'
+
+
+# ======================================================================
+# ENCRYPTION SETTINGS
+# ======================================================================
+
+ENCRYPTION_KEY = os.getenv('STELLAR_ENCRYPTION_KEY', '')
+if STELLAR_ENABLED and not ENCRYPTION_KEY:
+    raise ValueError('ENCRYPTION_KEY must be set when STELLAR_ENABLED=True')
+
+
+# ======================================================================
+# LOGGING CONFIGURATION
+# ======================================================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'chamahub.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'core': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+if not os.path.exists(BASE_DIR / 'logs'):
+    os.makedirs(BASE_DIR / 'logs')
+
+
+# ======================================================================
+# DEFAULT PRIMARY KEY FIELD TYPE
+# ======================================================================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

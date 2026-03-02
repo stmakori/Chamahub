@@ -3,40 +3,274 @@
 {% block title %}Login - ChamaHub{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">
-                    <i class="fas fa-sign-in-alt"></i> Login to ChamaHub
-                </h4>
+<div class="row justify-content-center align-items-center" style="min-height: calc(100vh - 80px);">
+    <div class="col-md-5 py-4">
+        <!-- Brand header -->
+        <div class="text-center mb-4 animate__animated animate__fadeInDown">
+            <i class="fas fa-users fa-3x text-primary mb-3"></i>
+            <h2 class="fw-bold">Welcome Back to ChamaHub</h2>
+            <p class="text-muted">Sign in to manage your chama finances</p>
+        </div>
+
+        <!-- Login card -->
+        <div class="card border-0 shadow-lg animate__animated animate__fadeInUp">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fas fa-sign-in-alt text-primary me-2"></i>Member Login</h5>
             </div>
-            <div class="card-body">
-                <form method="post">
+            <div class="card-body p-4">
+                {% if form.errors %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Login Failed!</strong> Please check your username and password.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <form method="post" class="needs-validation" novalidate id="loginForm">
                     {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="id_username" class="form-label">Username</label>
-                        <input type="text" class="form-control" name="username" id="id_username" required>
+                    <!-- Username -->
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               name="username" id="id_username" placeholder="username"
+                               value="{{ form.username.value|default:'' }}" required>
+                        <label for="id_username"><i class="fas fa-user text-muted me-2"></i>Username</label>
+                        {% if form.username.errors %}<div class="invalid-feedback">{{ form.username.errors.0 }}</div>{% endif %}
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="id_password" class="form-label">Password</label>
-                        <input type="password" class="form-control" name="password" id="id_password" required>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt"></i> Login
+
+                    <!-- Password -->
+                    <div class="form-floating mb-3 position-relative">
+                        <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                               name="password" id="id_password" placeholder="Password" required>
+                        <label for="id_password"><i class="fas fa-lock text-muted me-2"></i>Password</label>
+                        {% if form.password.errors %}<div class="invalid-feedback">{{ form.password.errors.0 }}</div>{% endif %}
+                        <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y me-3 p-0"
+                                onclick="togglePassword()" style="text-decoration: none; z-index: 10;">
+                            <i class="fas fa-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
+
+                    <!-- Remember me / Forgot password -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+                        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                            <small>Forgot password?</small>
+                        </a>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                            <span class="spinner-border spinner-border-sm d-none me-2" role="status" id="loginSpinner"></span>
+                            <i class="fas fa-sign-in-alt me-2" id="loginIcon"></i>Sign In
+                        </button>
+                    </div>
+
+                    {% if debug %}
+                    <div class="alert alert-info mt-4 mb-0 small">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Demo Credentials:</strong><br>
+                        Treasurer: <code>treasurer</code> / <code>treasurer123</code><br>
+                        Member: <code>member</code> / <code>member123</code>
+                    </div>
+                    {% endif %}
                 </form>
-                
-                <div class="text-center mt-3">
-                    <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+            </div>
+            <div class="card-footer bg-white py-3 text-center">
+                <p class="mb-0">Don't have an account? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Create account <i class="fas fa-arrow-right ms-1"></i></a></p>
+            </div>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="d-flex justify-content-center gap-4 mt-4 animate__animated animate__fadeInUp animate__delay-1s">
+            <div class="text-center trust-badge"><i class="fas fa-shield-alt text-success"></i><small class="d-block text-muted">Secure Login</small></div>
+            <div class="text-center trust-badge"><i class="fas fa-lock text-success"></i><small class="d-block text-muted">Encrypted</small></div>
+            <div class="text-center trust-badge"><i class="fas fa-clock text-success"></i><small class="d-block text-muted">24/7 Access</small></div>
+            <div class="text-center trust-badge"><i class="fas fa-link text-primary"></i><small class="d-block text-muted">Blockchain</small></div>
+        </div>
+    </div>
+
+    <!-- Right side feature highlight (desktop only) -->
+    <div class="col-md-5 d-none d-lg-block animate__animated animate__fadeInRight">
+        <div class="ps-5">
+            <div class="card border-0 bg-light p-4">
+                <h5 class="fw-bold mb-4"><i class="fas fa-quote-left text-primary me-2"></i>Why ChamaHub?</h5>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3"><i class="fas fa-check text-success"></i></div>
+                    <div><strong>Track contributions</strong><small class="text-muted d-block">Real-time M-Pesa updates</small></div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3"><i class="fas fa-check text-primary"></i></div>
+                    <div><strong>Manage loans</strong><small class="text-muted d-block">Apply and track approvals</small></div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3"><i class="fas fa-check text-info"></i></div>
+                    <div><strong>M-Pesa integration</strong><small class="text-muted d-block">Secure STK push</small></div>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3"><i class="fas fa-link text-warning"></i></div>
+                    <div><strong>Blockchain verified</strong><small class="text-muted d-block">Every transaction recorded on Stellar</small></div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <p class="small text-muted mb-2">"ChamaHub has made managing our chama so easy. No more paperwork!"</p>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-secondary rounded-circle p-2 me-2"><i class="fas fa-user text-white small"></i></div>
+                            <div><strong class="small">Mary W.</strong><small class="text-muted d-block">Member since 2023</small></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-key me-2"></i>Reset Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3">Enter your email address and we'll send you instructions to reset your password.</p>
+                <div class="mb-3"><label for="resetEmail" class="form-label">Email address</label><input type="email" class="form-control" id="resetEmail" placeholder="your@email.com"></div>
+                <button type="button" class="btn btn-primary w-100" onclick="showResetConfirmation()"><i class="fas fa-paper-plane me-2"></i>Send Reset Link</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Success Modal -->
+<div class="modal fade" id="resetSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Check Your Email</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="fas fa-envelope-open-text fa-4x text-success mb-3"></i>
+                <p>If an account exists with that email, we've sent password reset instructions.</p>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EMERGENCY OVERLAY REMOVER - This fixes stuck modal backdrops -->
+<script>
+(function() {
+    // Function to remove any stuck modal backdrops
+    function removeStuckOverlays() {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 0) {
+            console.log('🧹 Cleaning up ' + backdrops.length + ' stuck modal backdrop(s)');
+            backdrops.forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    }
+    
+    // Run immediately
+    removeStuckOverlays();
+    
+    // Run whenever a modal is hidden
+    document.addEventListener('hidden.bs.modal', function() {
+        setTimeout(removeStuckOverlays, 50);
+    });
+    
+    // Run on page show
+    window.addEventListener('pageshow', removeStuckOverlays);
+    
+    // Run periodically just to be safe (every 2 seconds)
+    setInterval(removeStuckOverlays, 2000);
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const loginIcon = document.getElementById('loginIcon');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            const username = document.getElementById('id_username').value.trim();
+            const password = document.getElementById('id_password').value;
+            if (!username || !password) {
+                e.preventDefault();
+                alert('Please fill in all fields');
+                return;
+            }
+            loginBtn.disabled = true;
+            loginSpinner.classList.remove('d-none');
+            loginIcon.classList.add('d-none');
+        });
+    }
+
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('focus', () => input.closest('.form-floating')?.classList.add('focused'));
+        input.addEventListener('blur', () => input.closest('.form-floating')?.classList.remove('focused'));
+    });
+
+    document.querySelector('.alert-info')?.addEventListener('dblclick', function () {
+        document.getElementById('id_username').value = 'treasurer';
+        document.getElementById('id_password').value = 'treasurer123';
+    });
+});
+
+function togglePassword() {
+    const input = document.getElementById('id_password');
+    const icon = document.getElementById('togglePasswordIcon');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    icon.classList.toggle('fa-eye', !isHidden);
+    icon.classList.toggle('fa-eye-slash', isHidden);
+}
+
+function showResetConfirmation() {
+    const forgotModal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+    forgotModal.hide();
+    document.getElementById('resetEmail').value = '';
+    setTimeout(() => {
+        new bootstrap.Modal(document.getElementById('resetSuccessModal')).show();
+    }, 300);
+}
+
+document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        const btn = document.getElementById('loginBtn');
+        if (btn && !btn.disabled) btn.click();
+    }
+    if (e.key === 'Escape') {
+        document.getElementById('id_username').value = '';
+        document.getElementById('id_password').value = '';
+    }
+});
+</script>
+
+<style>
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: var(--bs-primary);
+    opacity: 0.8;
+}
+.form-floating.focused label { color: var(--bs-primary) !important; }
+.form-floating label i { font-size: 0.9rem; }
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.15);
+}
+.trust-badge { transition: transform 0.3s ease; }
+.trust-badge:hover { transform: translateY(-5px); }
+@media (max-width: 768px) {
+    .card-body { padding: 1.5rem !important; }
+}
+</style>
 {% endblock %}

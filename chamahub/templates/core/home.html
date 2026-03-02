@@ -1,107 +1,499 @@
 {% extends 'core/base.html' %}
 
-{% block title %}ChamaHub - Home{% endblock %}
+{% block title %}ChamaHub - Smart Chama Management{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 mx-auto text-center">
-        <h1 class="display-4 mb-4">
-            <i class="fas fa-users text-primary"></i> Welcome to ChamaHub
-        </h1>
-        <p class="lead mb-4">
-            A comprehensive chama management system that combines member contributions and loans, 
-            integrated with Payhero for seamless payment processing.
-        </p>
-        
-        {% if not user.is_authenticated %}
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-md-2">
-                    <i class="fas fa-user-plus"></i> Join ChamaHub
-                </a>
-                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </a>
-            </div>
-        {% else %}
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
-                </a>
-            </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="row mt-5">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-piggy-bank fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Member Contributions</h5>
-                <p class="card-text">
-                    Track and manage member contributions with automatic payment processing 
-                    through Payhero integration.
+<!-- Hero Section with Gradient Background -->
+<div class="position-relative overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container px-4 py-5">
+        <div class="row align-items-center g-5 py-5">
+            <div class="col-lg-6 text-white">
+                <h1 class="display-4 fw-bold lh-1 mb-3 animate__animated animate__fadeInUp">
+                    <i class="fas fa-users me-2"></i>Welcome to ChamaHub
+                </h1>
+                <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">
+                    The complete digital solution for modern chamas. Manage contributions, loans, and member finances seamlessly with integrated M-Pesa payments.
                 </p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-hand-holding-usd fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Loan Management</h5>
-                <p class="card-text">
-                    Apply for loans, track approvals, and manage repayments with 
-                    interest calculations and progress tracking.
-                </p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
-                <h5 class="card-title">Financial Tracking</h5>
-                <p class="card-text">
-                    Monitor group balance, individual member balances, and 
-                    comprehensive financial reports.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-5">
-    <div class="col-lg-8 mx-auto">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-info-circle"></i> Features
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Member registration and authentication</li>
-                            <li><i class="fas fa-check text-success"></i> Contribution tracking and payment processing</li>
-                            <li><i class="fas fa-check text-success"></i> Loan application and approval workflow</li>
-                            <li><i class="fas fa-check text-success"></i> Repayment tracking with progress indicators</li>
-                        </ul>
+                
+                {% if not user.is_authenticated %}
+                    <div class="d-flex gap-3 animate__animated animate__fadeInUp animate__delay-2s">
+                        <a href="{% url 'register' %}" class="btn btn-warning btn-lg px-4">
+                            <i class="fas fa-user-plus me-2"></i>Get Started Free
+                        </a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
                     </div>
-                    <div class="col-md-6">
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Treasurer dashboard for loan approvals</li>
-                            <li><i class="fas fa-check text-success"></i> Group and individual balance calculations</li>
-                            <li><i class="fas fa-check text-success"></i> Payhero payment integration</li>
-                            <li><i class="fas fa-check text-success"></i> Webhook support for payment confirmations</li>
-                        </ul>
+                {% else %}
+                    <div class="animate__animated animate__fadeInUp animate__delay-2s">
+                        <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-4">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    </div>
+                {% endif %}
+
+                <!-- Trust Badges -->
+                <div class="mt-5 d-flex gap-4 animate__animated animate__fadeInUp animate__delay-3s">
+                    <div class="text-white-50">
+                        <i class="fas fa-shield-alt me-2"></i>Secured by M-Pesa
+                    </div>
+                    <div class="text-white-50">
+                        <i class="fas fa-lock me-2"></i>256-bit Encryption
+                    </div>
+                    <div class="text-white-50">
+                        <i class="fas fa-clock me-2"></i>Real-time Updates
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 animate__animated animate__fadeInRight">
+                <!-- Dashboard Preview Card -->
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-chart-line text-primary fs-3"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Chama Dashboard Preview</h5>
+                                <small class="text-muted">Real-time financial overview</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Mini Stats -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-4">
+                                <div class="bg-light rounded-3 p-2 text-center">
+                                    <small class="text-muted d-block">Contributions</small>
+                                    <strong class="text-success">KSh 1.2M</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light rounded-3 p-2 text-center">
+                                    <small class="text-muted d-block">Active Loans</small>
+                                    <strong class="text-primary">KSh 450K</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light rounded-3 p-2 text-center">
+                                    <small class="text-muted d-block">Members</small>
+                                    <strong class="text-info">24</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mini Chart Bars -->
+                        <div class="d-flex align-items-end gap-2 mt-3" style="height: 60px;">
+                            <div class="bg-primary" style="width: 12%; height: 40px; border-radius: 4px;"></div>
+                            <div class="bg-primary" style="width: 12%; height: 65px; border-radius: 4px;"></div>
+                            <div class="bg-primary" style="width: 12%; height: 45px; border-radius: 4px;"></div>
+                            <div class="bg-primary" style="width: 12%; height: 80px; border-radius: 4px;"></div>
+                            <div class="bg-primary" style="width: 12%; height: 55px; border-radius: 4px;"></div>
+                            <div class="bg-primary" style="width: 12%; height: 70px; border-radius: 4px;"></div>
+                        </div>
+                        
+                        <!-- Activity List -->
+                        <div class="mt-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success bg-opacity-10 text-success p-2 me-2">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </span>
+                                    <div>
+                                        <small class="fw-bold d-block">New Contribution</small>
+                                        <small class="text-muted">John D. added KSh 5,000</small>
+                                    </div>
+                                </div>
+                                <small class="text-muted">2 min ago</small>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning bg-opacity-10 text-warning p-2 me-2">
+                                        <i class="fas fa-hand-holding-usd"></i>
+                                    </span>
+                                    <div>
+                                        <small class="fw-bold d-block">Loan Approved</small>
+                                        <small class="text-muted">Mary's loan of KSh 20,000</small>
+                                    </div>
+                                </div>
+                                <small class="text-muted">1 hour ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wave Separator -->
+    <div class="position-absolute bottom-0 start-0 w-100">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
+            <path fill="#ffffff" fill-opacity="1" d="M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,85.3C672,75,768,85,864,96C960,107,1056,117,1152,112C1248,107,1344,85,1392,74.7L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+        </svg>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="container mt-5 pt-4">
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="fw-bold text-primary mb-0">10K+</h2>
+                <p class="text-muted">Active Members</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="fw-bold text-success mb-0">KSh 50M+</h2>
+                <p class="text-muted">Contributions</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="fw-bold text-info mb-0">5K+</h2>
+                <p class="text-muted">Loans Processed</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="fw-bold text-warning mb-0">100%</h2>
+                <p class="text-muted">Secure Payments</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mt-5 pt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Everything Your Chama Needs</h2>
+        <p class="lead text-muted">Powerful features to manage your group finances effectively</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon-wrapper bg-primary bg-opacity-10 rounded-circle mx-auto mb-4">
+                        <i class="fas fa-piggy-bank text-primary fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Member Contributions</h5>
+                    <p class="text-muted mb-0">
+                        Track contributions with automatic M-Pesa payment processing. Real-time updates and confirmation.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                            <i class="fas fa-clock me-1"></i>Real-time
+                        </span>
+                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 ms-2">
+                            <i class="fas fa-shield me-1"></i>Secure
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon-wrapper bg-success bg-opacity-10 rounded-circle mx-auto mb-4">
+                        <i class="fas fa-hand-holding-usd text-success fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Loan Management</h5>
+                    <p class="text-muted mb-0">
+                        Apply, approve, and track loans with interest calculations and automated repayment schedules.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                            <i class="fas fa-calculator me-1"></i>Auto Interest
+                        </span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 ms-2">
+                            <i class="fas fa-chart-line me-1"></i>Tracking
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon-wrapper bg-info bg-opacity-10 rounded-circle mx-auto mb-4">
+                        <i class="fas fa-chart-pie text-info fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Financial Analytics</h5>
+                    <p class="text-muted mb-0">
+                        Comprehensive reports, balance tracking, and financial insights for better decision making.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2">
+                            <i class="fas fa-file-pdf me-1"></i>Export
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 ms-2">
+                            <i class="fas fa-chart-bar me-1"></i>Analytics
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- How It Works -->
+<div class="container mt-5 pt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">How ChamaHub Works</h2>
+        <p class="lead text-muted">Simple 3-step process to get your chama online</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="text-center position-relative">
+                <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3">1</div>
+                <h5>Register Your Chama</h5>
+                <p class="text-muted">Create your account and add members to your chama</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center position-relative">
+                <div class="step-number bg-success text-white rounded-circle mx-auto mb-3">2</div>
+                <h5>Start Contributing</h5>
+                <p class="text-muted">Members make contributions via M-Pesa STK push</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center position-relative">
+                <div class="step-number bg-info text-white rounded-circle mx-auto mb-3">3</div>
+                <h5>Access Loans</h5>
+                <p class="text-muted">Apply for loans and track repayments in real-time</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features List Card -->
+<div class="container mt-5 pt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        All Features Included
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Member Management</strong>
+                                    <span class="text-muted d-block ms-4">Registration, profiles, roles</span>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Contribution Tracking</strong>
+                                    <span class="text-muted d-block ms-4">Real-time updates, payment confirmations</span>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Loan Applications</strong>
+                                    <span class="text-muted d-block ms-4">Apply, approve, disburse workflow</span>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Repayment Tracking</strong>
+                                    <span class="text-muted d-block ms-4">Progress bars, due dates, reminders</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Treasurer Dashboard</strong>
+                                    <span class="text-muted d-block ms-4">Approve loans, monitor finances</span>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Balance Calculations</strong>
+                                    <span class="text-muted d-block ms-4">Group and individual balances</span>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>M-Pesa Integration</strong>
+                                    <span class="text-muted d-block ms-4">STK push payments, webhooks</span>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Reports & Analytics</strong>
+                                    <span class="text-muted d-block ms-4">Export data, financial insights</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonials -->
+<div class="container mt-5 pt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Trusted by Chamas Across Kenya</h2>
+        <p class="lead text-muted">See what our users are saying</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="text-muted mb-3">"ChamaHub has transformed how we manage our finances. No more spreadsheets and manual tracking!"</p>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-user text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Mary Wanjiku</h6>
+                            <small class="text-muted">Treasurer, Umoja Chama</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="text-muted mb-3">"Loan applications that used to take weeks now take minutes. Our members love the transparency."</p>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-user text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">John Omondi</h6>
+                            <small class="text-muted">Chairperson, Biashara Group</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="text-muted mb-3">"The M-Pesa integration is flawless. Contributions are confirmed instantly, no more chasing payments."</p>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-user text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Sarah Kimani</h6>
+                            <small class="text-muted">Member, Mshiriki Chama</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="container mt-5 pt-4">
+    <div class="card border-0 bg-gradient-primary text-white">
+        <div class="card-body p-5 text-center">
+            <h3 class="fw-bold mb-3">Ready to Digitize Your Chama?</h3>
+            <p class="lead mb-4">Join thousands of chamas already using ChamaHub</p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-warning btn-lg px-5">
+                    <i class="fas fa-rocket me-2"></i>Get Started Now
+                </a>
+            {% else %}
+                <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-5">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+            {% endif %}
+            <p class="mt-3 small text-white-50">
+                <i class="fas fa-lock me-1"></i>No credit card required • Free to start
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Add minimal custom styles -->
+<style>
+    .feature-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .hover-card {
+        transition: all 0.3s ease;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+    
+    .step-number {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .text-white-50 {
+        color: rgba(255,255,255,0.7) !important;
+    }
+    
+    /* Add connecting line between steps */
+    @media (min-width: 768px) {
+        .col-md-4:not(:last-child) .step-number::after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 60%;
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--bs-primary), var(--bs-success));
+            z-index: -1;
+        }
+    }
+</style>
 {% endblock %}

@@ -1,0 +1,306 @@
+{% extends 'core/base.html' %}
+{% load core_extras %}
+
+{% block title %}Manage Payments - Treasurer{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-credit-card text-primary me-2"></i>
+            Payment Management
+        </h2>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-2">
+                                <i class="fas fa-piggy-bank me-1"></i>Contributions
+                            </span>
+                            <h3 class="mb-1">{{ pending_contributions.count }}</h3>
+                            <small class="text-muted">Pending confirmation</small>
+                        </div>
+                        <div class="icon-shape bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-piggy-bank fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 mb-2">
+                                <i class="fas fa-credit-card me-1"></i>Repayments
+                            </span>
+                            <h3 class="mb-1">{{ pending_repayments.count }}</h3>
+                            <small class="text-muted">Pending confirmation</small>
+                        </div>
+                        <div class="icon-shape bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-credit-card fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 mb-2">
+                                <i class="fas fa-money-bill-wave me-1"></i>Withdrawals
+                            </span>
+                            <h3 class="mb-1">{{ pending_withdrawals.count }}</h3>
+                            <small class="text-muted">Pending confirmation</small>
+                        </div>
+                        <div class="icon-shape bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-money-bill-wave fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Contributions -->
+    {% if pending_contributions %}
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-piggy-bank text-primary me-2"></i>Pending Contributions
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Member</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th class="pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contribution in pending_contributions %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </div>
+                                    {{ contribution.member.get_full_name|default:contribution.member.username }}
+                                </div>
+                            </td>
+                            <td class="fw-bold">KSh {{ contribution.amount|floatformat:2 }}</td>
+                            <td>{{ contribution.date|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <small class="text-muted">{{ contribution.payhero_reference|default:"—"|truncatechars:12 }}</small>
+                            </td>
+                            <td class="pe-4">
+                                <form method="post" action="{% url 'confirm_payment' 'contribution' contribution.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Confirm this contribution?')">
+                                        <i class="fas fa-check me-1"></i>Confirm
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pending Repayments -->
+    {% if pending_repayments %}
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-credit-card text-success me-2"></i>Pending Repayments
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Member</th>
+                            <th>Loan</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th class="pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for repayment in pending_repayments %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="fas fa-user text-success"></i>
+                                    </div>
+                                    {{ repayment.loan.member.get_full_name|default:repayment.loan.member.username }}
+                                </div>
+                            </td>
+                            <td>KSh {{ repayment.loan.amount|floatformat:2 }}</td>
+                            <td class="fw-bold">KSh {{ repayment.amount|floatformat:2 }}</td>
+                            <td>{{ repayment.date|date:"M d, Y H:i" }}</td>
+                            <td class="pe-4">
+                                <form method="post" action="{% url 'confirm_payment' 'repayment' repayment.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Confirm this repayment?')">
+                                        <i class="fas fa-check me-1"></i>Confirm
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pending Withdrawals -->
+    {% if pending_withdrawals %}
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-money-bill-wave text-warning me-2"></i>Pending Withdrawals
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Member</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th class="pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for withdrawal in pending_withdrawals %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="fas fa-user text-warning"></i>
+                                    </div>
+                                    {{ withdrawal.member.get_full_name|default:withdrawal.member.username }}
+                                </div>
+                            </td>
+                            <td class="fw-bold">KSh {{ withdrawal.amount|floatformat:2 }}</td>
+                            <td>{{ withdrawal.date|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <small class="text-muted">{{ withdrawal.payhero_reference|default:"—"|truncatechars:12 }}</small>
+                            </td>
+                            <td class="pe-4">
+                                <form method="post" action="{% url 'confirm_payment' 'withdrawal' withdrawal.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Confirm this withdrawal?')">
+                                        <i class="fas fa-check me-1"></i>Confirm
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- If no pending payments -->
+    {% if not pending_contributions and not pending_repayments and not pending_withdrawals %}
+    <div class="alert alert-success text-center py-5">
+        <i class="fas fa-check-circle fa-3x mb-3"></i>
+        <h4>No Pending Payments</h4>
+        <p class="mb-0">All payments are up to date!</p>
+    </div>
+    {% endif %}
+
+    <!-- Recent Confirmations - FIXED -->
+    {% if recent_confirmations %}
+    <div class="card border-0 shadow mt-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-history text-info me-2"></i>Recent Confirmations
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Type</th>
+                            <th>Member</th>
+                            <th>Amount</th>
+                            <th class="pe-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent_confirmations %}
+                        <tr>
+                            <td class="ps-4"><small>{{ item.date|date:"M d, Y H:i" }}</small></td>
+                            <td>
+                                <span class="badge bg-{{ item.color }} bg-opacity-10 text-{{ item.color }}">
+                                    <i class="fas fa-{{ item.icon }} me-1"></i>
+                                    {{ item.type }}
+                                </span>
+                            </td>
+                            <td>
+                                {# FIXED: Use member_name instead of trying to access User object #}
+                                {{ item.member_name }}
+                            </td>
+                            <td class="fw-bold">KSh {{ item.amount|floatformat:2 }}</td>
+                            <td class="pe-4">
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Confirmed
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.icon-shape {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.table td {
+    vertical-align: middle;
+}
+</style>
+{% endblock %}
