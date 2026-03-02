@@ -1,0 +1,483 @@
+{% extends 'core/base.html' %}
+{% load stellar_tags %}
+
+{% block title %}Blockchain Explorer — ChamaHub{% endblock %}
+
+{% block content %}
+
+  {# ================================================================ #}
+  {# Page header                                                       #}
+  {# ================================================================ #}
+  <div class="row mb-4">
+    <div class="col-12 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <h2 class="mb-1">
+          <i class="fas fa-link text-primary me-2"></i>Blockchain Explorer
+        </h2>
+        <p class="text-muted mb-0">
+          Transactions verified on the Stellar
+          {% if stellar_network == 'public' %}
+            <span class="badge bg-success">Mainnet</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Testnet</span>
+          {% endif %}
+          blockchain
+        </p>
+      </div>
+      {# Quick link back to dashboard #}
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+      </a>
+    </div>
+  </div>
+
+  {# ================================================================ #}
+  {# Stellar disabled notice                                           #}
+  {# ================================================================ #}
+  {% if not stellar_enabled %}
+  <div class="alert alert-warning d-flex align-items-center" role="alert">
+    <i class="fas fa-exclamation-triangle me-2 fs-5"></i>
+    <div>
+      <strong>Blockchain recording is currently disabled.</strong>
+      Set <code>STELLAR_ENABLED = True</code> in your settings to activate it.
+    </div>
+  </div>
+  {% endif %}
+
+  {# ================================================================ #}
+  {# Status summary cards                                              #}
+  {# ================================================================ #}
+  <div class="row g-3 mb-4">
+
+    {# Stellar connection status #}
+    <div class="col-md-4">
+      <div class="card h-100 {% if stellar_available %}bg-success{% else %}bg-danger{% endif %} text-white">
+        <div class="card-body">
+          <h6 class="card-title text-white-50 text-uppercase small fw-bold">
+            <i class="fas fa-satellite-dish me-1"></i>Stellar Status
+          </h6>
+          {% if stellar_available %}
+            <p class="display-6 mb-1">Active</p>
+            <small>Connected to Stellar {{ stellar_network }}</small>
+          {% else %}
+            <p class="display-6 mb-1">Offline</p>
+            <small>
+              {% if stellar_enabled %}
+                Service unavailable — check your credentials
+              {% else %}
+                Disabled in settings
+              {% endif %}
+            </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Member's total recorded transactions #}
+    <div class="col-md-4">
+      <div class="card h-100 bg-info text-white">
+        <div class="card-body">
+          <h6 class="card-title text-white-50 text-uppercase small fw-bold">
+            <i class="fas fa-cube me-1"></i>Your Verified Transactions
+          </h6>
+          <p class="display-6 mb-1">{{ member_recorded_counts.total }}</p>
+          <small>
+            {{ member_recorded_counts.contributions }} contribution{{ member_recorded_counts.contributions|pluralize }} ·
+            {{ member_recorded_counts.repayments }} repayment{{ member_recorded_counts.repayments|pluralize }} ·
+            {{ member_recorded_counts.withdrawals }} withdrawal{{ member_recorded_counts.withdrawals|pluralize }}
+          </small>
+        </div>
+      </div>
+    </div>
+
+    {# Unrecorded transactions #}
+    <div class="col-md-4">
+      <div class="card h-100 {% if member_unrecorded.total %}bg-warning text-dark{% else %}bg-secondary text-white{% endif %}">
+        <div class="card-body">
+          <h6 class="card-title {% if member_unrecorded.total %}text-dark{% else %}text-white-50{% endif %} text-uppercase small fw-bold">
+            <i class="fas fa-clock me-1"></i>Pending Verification
+          </h6>
+          <p class="display-6 mb-1">{{ member_unrecorded.total }}</p>
+          {% if member_unrecorded.total %}
+          <small>
+            {% if member_unrecorded.contributions %}
+              {{ member_unrecorded.contributions }} contribution{{ member_unrecorded.contributions|pluralize }}
+            {% endif %}
+            {% if member_unrecorded.repayments %}
+              · {{ member_unrecorded.repayments }} repayment{{ member_unrecorded.repayments|pluralize }}
+            {% endif %}
+            {% if member_unrecorded.withdrawals %}
+              · {{ member_unrecorded.withdrawals }} withdrawal{{ member_unrecorded.withdrawals|pluralize }}
+            {% endif %}
+            not yet on-chain
+          </small>
+          {% else %}
+          <small>All confirmed transactions recorded ✓</small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ================================================================ #}
+  {# Treasurer: Stellar account info                                   #}
+  {# ================================================================ #}
+  {% if is_treasurer and account_info %}
+  <div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-wallet me-2"></i>Chama Stellar Account
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-7">
+          <p class="text-muted small mb-1 fw-bold">PUBLIC KEY</p>
+          <code class="user-select-all small">{{ stellar_public_key }}</code>
+          <p class="text-muted small mt-3 mb-1 fw-bold">SEQUENCE NUMBER</p>
+          <code>{{ account_info.sequence }}</code>
+        </div>
+        <div class="col-md-5">
+          <p class="text-muted small mb-1 fw-bold">BALANCES</p>
+          {% for balance in account_info.balances %}
+          <h5 class="mb-1">
+            {{ balance.balance|floatformat:7 }}
+            <span class="badge bg-primary">{{ balance.type }}</span>
+          </h5>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="mt-3">
+        <a href="https://stellar.expert/explorer/{{ stellar_network }}/account/{{ stellar_public_key }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn btn-outline-primary btn-sm">
+          <i class="fas fa-external-link-alt me-1"></i>View account on Stellar Expert
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ================================================================ #}
+  {# Treasurer: group-wide unrecorded stats                           #}
+  {# ================================================================ #}
+  {% if is_treasurer and group_unrecorded %}
+  <div class="card mb-4 {% if group_unrecorded.total %}border-warning{% else %}border-success{% endif %}">
+    <div class="card-header {% if group_unrecorded.total %}bg-warning text-dark{% else %}bg-success text-white{% endif %}">
+      <h5 class="mb-0">
+        <i class="fas fa-users me-2"></i>Group Blockchain Coverage
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row text-center g-3">
+
+        <div class="col-6 col-md-3">
+          <div class="p-3 rounded {% if group_unrecorded.contributions %}bg-warning bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %}">
+            <p class="display-6 mb-0 {% if group_unrecorded.contributions %}text-warning{% else %}text-success{% endif %}">
+              {{ group_unrecorded.contributions }}
+            </p>
+            <small class="text-muted">Contributions unrecorded</small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="p-3 rounded {% if group_unrecorded.loans %}bg-warning bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %}">
+            <p class="display-6 mb-0 {% if group_unrecorded.loans %}text-warning{% else %}text-success{% endif %}">
+              {{ group_unrecorded.loans }}
+            </p>
+            <small class="text-muted">Loan disbursements unrecorded</small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="p-3 rounded {% if group_unrecorded.repayments %}bg-warning bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %}">
+            <p class="display-6 mb-0 {% if group_unrecorded.repayments %}text-warning{% else %}text-success{% endif %}">
+              {{ group_unrecorded.repayments }}
+            </p>
+            <small class="text-muted">Repayments unrecorded</small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="p-3 rounded {% if group_unrecorded.withdrawals %}bg-warning bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %}">
+            <p class="display-6 mb-0 {% if group_unrecorded.withdrawals %}text-warning{% else %}text-success{% endif %}">
+              {{ group_unrecorded.withdrawals }}
+            </p>
+            <small class="text-muted">Withdrawals unrecorded</small>
+          </div>
+        </div>
+
+      </div>
+
+      {% if group_unrecorded.total %}
+      <div class="alert alert-warning mt-3 mb-0 d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span>
+          <strong>{{ group_unrecorded.total }} transaction{{ group_unrecorded.total|pluralize }}</strong>
+          confirmed but not yet recorded on-chain.
+          These will be recorded automatically on the next payment event.
+        </span>
+      </div>
+      {% else %}
+      <div class="alert alert-success mt-3 mb-0 d-flex align-items-center">
+        <i class="fas fa-check-circle me-2"></i>
+        <span>All confirmed group transactions are recorded on the blockchain.</span>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endif %}
+
+  {# ================================================================ #}
+  {# Treasurer: all-members blockchain transactions                    #}
+  {# ================================================================ #}
+  {% if is_treasurer and all_txs %}
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-globe me-2"></i>All Group Blockchain Transactions
+      </h5>
+      <span class="badge bg-secondary">{{ group_recorded_counts.total }} total</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Member</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Transaction Hash</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in all_txs %}
+            <tr>
+              <td class="text-muted small align-middle">
+                {{ tx.created_at|date:"d M Y H:i" }}
+              </td>
+              <td class="align-middle">
+                <span class="fw-semibold">
+                  {{ tx.member.get_full_name|default:tx.member.username }}
+                </span>
+              </td>
+              <td class="align-middle">
+                {% if tx.transaction_type == 'contribution' %}
+                  <span class="badge bg-success">Contribution</span>
+                {% elif tx.transaction_type == 'loan_disbursement' %}
+                  <span class="badge bg-primary">Loan</span>
+                {% elif tx.transaction_type == 'repayment' %}
+                  <span class="badge bg-info text-dark">Repayment</span>
+                {% elif tx.transaction_type == 'withdrawal' %}
+                  <span class="badge bg-warning text-dark">Withdrawal</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ tx.get_transaction_type_display }}</span>
+                {% endif %}
+              </td>
+              <td class="fw-semibold align-middle">KSh {{ tx.amount|floatformat:2 }}</td>
+              <td class="align-middle">{% stellar_explorer_link tx.stellar_tx_hash %}</td>
+              <td class="align-middle">
+                <a href="{% url 'blockchain_tx_detail' tx.stellar_tx_hash %}"
+                   class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-eye me-1"></i>Details
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# All-transactions pagination #}
+      {% if all_txs.has_other_pages %}
+      <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <small class="text-muted">
+          Page {{ all_txs.number }} of {{ all_txs.paginator.num_pages }}
+          ({{ all_txs.paginator.count }} total)
+        </small>
+        <nav aria-label="All transactions pagination">
+          <ul class="pagination pagination-sm mb-0">
+            {% if all_txs.has_previous %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?all_page={{ all_txs.previous_page_number }}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+            </li>
+            {% endif %}
+
+            {% for num in all_txs.paginator.page_range %}
+              {% if all_txs.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% elif num > all_txs.number|add:'-3' and num < all_txs.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?all_page={{ num }}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">
+                    {{ num }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if all_txs.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?all_page={{ all_txs.next_page_number }}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      {% if not all_txs %}
+      <p class="text-muted text-center py-4 mb-0">No blockchain transactions recorded yet.</p>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endif %}
+
+  {# ================================================================ #}
+  {# Member's own blockchain transactions                              #}
+  {# ================================================================ #}
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-history me-2"></i>Your Blockchain Transactions
+      </h5>
+      <span class="badge bg-secondary">{{ member_recorded_counts.total }} total</span>
+    </div>
+
+    <div class="card-body p-0">
+      {% if member_txs %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Memo</th>
+              <th>Transaction Hash</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in member_txs %}
+            <tr>
+              <td class="text-muted small align-middle">
+                {{ tx.created_at|date:"d M Y H:i" }}
+              </td>
+              <td class="align-middle">
+                {% if tx.transaction_type == 'contribution' %}
+                  <span class="badge bg-success">Contribution</span>
+                {% elif tx.transaction_type == 'loan_disbursement' %}
+                  <span class="badge bg-primary">Loan</span>
+                {% elif tx.transaction_type == 'repayment' %}
+                  <span class="badge bg-info text-dark">Repayment</span>
+                {% elif tx.transaction_type == 'withdrawal' %}
+                  <span class="badge bg-warning text-dark">Withdrawal</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ tx.get_transaction_type_display }}</span>
+                {% endif %}
+              </td>
+              <td class="fw-semibold align-middle">KSh {{ tx.amount|floatformat:2 }}</td>
+              <td class="align-middle">
+                {% if tx.memo %}
+                  <code class="small">{{ tx.memo }}</code>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="align-middle">{% stellar_explorer_link tx.stellar_tx_hash %}</td>
+              <td class="align-middle">
+                <a href="{% url 'blockchain_tx_detail' tx.stellar_tx_hash %}"
+                   class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-eye me-1"></i>Details
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# Member transactions pagination #}
+      {% if member_txs.has_other_pages %}
+      <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <small class="text-muted">
+          Page {{ member_txs.number }} of {{ member_txs.paginator.num_pages }}
+          ({{ member_txs.paginator.count }} total)
+        </small>
+        <nav aria-label="Your transactions pagination">
+          <ul class="pagination pagination-sm mb-0">
+            {% if member_txs.has_previous %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?page={{ member_txs.previous_page_number }}{% if request.GET.all_page %}&all_page={{ request.GET.all_page }}{% endif %}">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+            </li>
+            {% endif %}
+
+            {% for num in member_txs.paginator.page_range %}
+              {% if member_txs.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% elif num > member_txs.number|add:'-3' and num < member_txs.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?page={{ num }}{% if request.GET.all_page %}&all_page={{ request.GET.all_page }}{% endif %}">
+                    {{ num }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if member_txs.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?page={{ member_txs.next_page_number }}{% if request.GET.all_page %}&all_page={{ request.GET.all_page }}{% endif %}">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <p class="text-muted text-center py-5 mb-0">
+        <i class="fas fa-cube fa-2x d-block mb-3 opacity-25"></i>
+        No blockchain transactions yet.<br>
+        <small>Make a contribution or repayment to see it recorded here.</small>
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+{% endblock %}
