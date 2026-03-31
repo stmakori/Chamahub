@@ -1,13 +1,20 @@
 from django.contrib import admin
-from .models import Contribution, Loan, Repayment, ChamaProfile, Withdrawal
+from .models import (
+    Contribution,
+    Loan,
+    Repayment,
+    ChamaProfile,
+    Withdrawal,
+    BlockchainTransaction,
+)
 
 
 @admin.register(Contribution)
 class ContributionAdmin(admin.ModelAdmin):
-    list_display = ['member', 'amount', 'status', 'date', 'payhero_reference']
+    list_display = ['member', 'amount', 'status', 'date', 'payhero_reference', 'stellar_tx_hash']
     list_filter = ['status', 'date']
     search_fields = ['member__username', 'payhero_reference']
-    readonly_fields = ['date']
+    readonly_fields = ['date', 'status_updated_at', 'stellar_tx_hash', 'stellar_recorded_at']
 
 
 @admin.register(Loan)
@@ -31,18 +38,18 @@ class LoanAdmin(admin.ModelAdmin):
 
 @admin.register(Repayment)
 class RepaymentAdmin(admin.ModelAdmin):
-    list_display = ['loan', 'amount', 'status', 'date', 'payhero_reference']
+    list_display = ['loan', 'amount', 'status', 'date', 'payhero_reference', 'stellar_tx_hash']
     list_filter = ['status', 'date']
     search_fields = ['loan__member__username', 'payhero_reference']
-    readonly_fields = ['date']
+    readonly_fields = ['date', 'status_updated_at', 'stellar_tx_hash', 'stellar_recorded_at']
 
 
 @admin.register(Withdrawal)
 class WithdrawalAdmin(admin.ModelAdmin):
-    list_display = ['member', 'amount', 'status', 'date', 'payhero_reference']
+    list_display = ['member', 'amount', 'status', 'date', 'payhero_reference', 'stellar_tx_hash']
     list_filter = ['status', 'date']
     search_fields = ['member__username', 'member__first_name', 'member__last_name', 'payhero_reference']
-    readonly_fields = ['date']
+    readonly_fields = ['date', 'status_updated_at', 'stellar_tx_hash', 'stellar_recorded_at']
     ordering = ['-date']
 
 
@@ -52,3 +59,35 @@ class ChamaProfileAdmin(admin.ModelAdmin):
     list_filter = ['role', 'is_active', 'joined_date']
     search_fields = ['user__username', 'phone_number', 'id_number']
     readonly_fields = ['joined_date']
+
+
+@admin.register(BlockchainTransaction)
+class BlockchainTransactionAdmin(admin.ModelAdmin):
+    list_display = [
+        'transaction_type',
+        'reference_id',
+        'member',
+        'amount',
+        'stellar_tx_hash',
+        'confirmed_at',
+        'created_at',
+    ]
+    list_filter = ['transaction_type', 'created_at', 'confirmed_at']
+    search_fields = ['stellar_tx_hash', 'member__username', 'reference_id']
+    readonly_fields = [
+        'transaction_type',
+        'reference_id',
+        'member',
+        'amount',
+        'memo',
+        'stellar_tx_hash',
+        'created_at',
+        'confirmed_at',
+    ]
+    ordering = ['-created_at']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

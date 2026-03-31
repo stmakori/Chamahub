@@ -7,8 +7,6 @@ import logging
 
 from django.conf import settings
 
-from core.services.stellar import StellarService
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,9 +32,17 @@ class StellarRecorder:
     }
 
     def __init__(self):
-        self.stellar = StellarService()
+        self.stellar = None
+        try:
+            # Lazy import prevents Django startup failure when stellar_sdk is missing.
+            from core.services.stellar import StellarService
+            self.stellar = StellarService()
+        except Exception as exc:
+            logger.warning("Stellar service unavailable during init: %s", exc)
+
         self.enabled = (
             getattr(settings, 'STELLAR_ENABLED', False)
+            and self.stellar is not None
             and self.stellar.is_available
         )
 
@@ -59,6 +65,11 @@ class StellarRecorder:
         if not self.enabled:
             logger.info(f"Stellar recording disabled — skipping {tx_type} #{obj.pk}")
             return None
+
+        # Idempotency guard: never submit again if we already stored a hash.
+        if getattr(obj, 'stellar_tx_hash', None):
+            logger.info(f"Stellar already recorded — skipping {tx_type} #{obj.pk}")
+            return obj.stellar_tx_hash
 
         type_code = self.TRANSACTION_TYPE_CODES[tx_type]
 

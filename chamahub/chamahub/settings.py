@@ -12,7 +12,15 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+import importlib
+
+
+def load_dotenv(*args, **kwargs):
+    try:
+        dotenv_module = importlib.import_module('dotenv')
+        return dotenv_module.load_dotenv(*args, **kwargs)
+    except Exception:
+        return False
 
 # Load environment variables from .env file
 load_dotenv()
@@ -57,7 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',  # Our ChamaHub core app
+    'core.apps.CoreConfig',  # Our ChamaHub core app
 ]
 
 MIDDLEWARE = [
@@ -83,6 +91,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.dashboard_mode_context',
             ],
         },
     },
@@ -104,8 +113,11 @@ DATABASES = {
 
 # For production, you might want to use PostgreSQL
 if os.getenv('DATABASE_URL'):
-    import dj_database_url
-    DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    try:
+        dj_database_url = importlib.import_module('dj_database_url')
+        DATABASES['default'] = dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    except ImportError:
+        print("WARNING: DATABASE_URL is set but dj_database_url is not installed")
 
 
 # ======================================================================
@@ -180,11 +192,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 PAYHERO_API_USERNAME = os.getenv('PAYHERO_API_USERNAME', '')
 PAYHERO_API_PASSWORD = os.getenv('PAYHERO_API_PASSWORD', '')
+PAYHERO_API_KEY = os.getenv('PAYHERO_API_KEY', PAYHERO_API_PASSWORD)
 PAYHERO_ACCOUNT_ID = os.getenv('PAYHERO_ACCOUNT_ID', '')
 PAYHERO_BASIC_AUTH_TOKEN = os.getenv('PAYHERO_BASIC_AUTH_TOKEN', '')
 PAYHERO_BASE_URL = os.getenv('PAYHERO_BASE_URL', 'https://backend.payhero.co.ke')
 PAYHERO_CHANNEL_ID = os.getenv('PAYHERO_CHANNEL_ID', '3905')
 PAYHERO_WEBHOOK_SECRET = os.getenv('PAYHERO_WEBHOOK_SECRET', 'your_webhook_secret_here')
+PAYHERO_CALLBACK_URL = os.getenv('PAYHERO_CALLBACK_URL', '')
 
 # Validate Payhero configuration
 if not PAYHERO_BASIC_AUTH_TOKEN:

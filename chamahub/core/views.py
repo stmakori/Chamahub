@@ -7,6 +7,8 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from django.urls import reverse
+from django.db import transaction
 from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django.conf import settings
@@ -16,7 +18,9 @@ import requests
 import csv
 import hmac
 import hashlib
+import base64
 import logging
+import secrets
 from datetime import timedelta
 
 from .models import Contribution, Loan, Repayment, ChamaProfile, Withdrawal
@@ -32,6 +36,10 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 
+DASHBOARD_MODE_MEMBER = 'member'
+DASHBOARD_MODE_TREASURER = 'treasurer'
+
+
 def _get_stellar_recorder():
     if not getattr(settings, 'STELLAR_ENABLED', False):
         return None
@@ -42,6 +50,131 @@ def _get_stellar_recorder():
     except Exception as e:
         logger.error(f"Could not load StellarRecorder: {e}")
         return None
+
+
+def _normalize_mpesa_phone(phone_number):
+    """Normalize to the format Payhero expects: 07xxxxxxxx or 01xxxxxxxx."""
+    if not phone_number:
+        return None
+
+    cleaned = ''.join(ch for ch in str(phone_number).strip() if ch.isdigit() or ch == '+')
+    if cleaned.startswith('+'):
+        cleaned = cleaned[1:]
+
+    digits = ''.join(ch for ch in cleaned if ch.isdigit())
+    if digits.startswith('254') and len(digits) == 12:
+        digits = '0' + digits[3:]
+
+    if len(digits) == 10 and digits.startswith('0'):
+        return digits
+
+    return None
+
+
+def _build_payhero_auth_header():
+    """Build Authorization header with backward compatibility for existing token setup."""
+    token = getattr(settings, 'PAYHERO_BASIC_AUTH_TOKEN', '')
+    if token:
+        return token if token.startswith('Basic ') else f'Basic {token}'
+
+    username = getattr(settings, 'PAYHERO_API_USERNAME', '')
+    api_key = getattr(settings, 'PAYHERO_API_KEY', '') or getattr(settings, 'PAYHERO_API_PASSWORD', '')
+    if not username or not api_key:
+        return ''
+
+    raw = f'{username}:{api_key}'.encode('utf-8')
+    return f"Basic {base64.b64encode(raw).decode('utf-8')}"
+
+
+def _payhero_headers():
+    return {
+        'Authorization': _build_payhero_auth_header(),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    }
+
+
+def _is_payhero_success(status, result_code):
+    normalized_status = str(status or '').strip().lower()
+    normalized_code = str(result_code).strip()
+    return normalized_code == '0' and normalized_status in {'success', 'completed'}
+
+
+def _is_payhero_failure(status, result_code):
+    normalized_status = str(status or '').strip().lower()
+    normalized_code = str(result_code).strip()
+    if normalized_code in {'1', '1032', '2001'}:
+        return True
+    return normalized_status in {'failed', 'cancelled', 'canceled', 'error'}
+
+
+def _append_note(existing, note):
+    if not note:
+        return existing
+    if not existing:
+        return note
+    if note in existing:
+        return existing
+    return f"{existing}\n{note}"
+
+
+def _is_positive_initiation_response(data):
+    """Best-effort success detection for Payhero initiation payloads."""
+    if not isinstance(data, dict):
+        return True
+
+    if data.get('success') is False:
+        return False
+
+    status_value = str(data.get('Status') or data.get('status') or '').strip().lower()
+    if status_value in {'failed', 'error', 'rejected'}:
+        return False
+
+    return True
+
+
+def _update_payment_by_reference(external_reference, status, result_code, result_desc='', provider_reference=''):
+    """
+    Update a local payment using Payhero callback/polling data.
+    Returns (matched, local_status, payment_label).
+    """
+    if not external_reference:
+        return False, 'unknown', ''
+
+    succeeded = _is_payhero_success(status, result_code)
+    failed = _is_payhero_failure(status, result_code)
+    if not succeeded and not failed:
+        return False, 'pending', ''
+
+    recorder = _get_stellar_recorder()
+    candidates = [
+        ('contribution', Contribution, lambda r, o: r.record_contribution(o)),
+        ('repayment', Repayment, lambda r, o: r.record_repayment(o)),
+        ('withdrawal', Withdrawal, lambda r, o: r.record_withdrawal(o)),
+    ]
+
+    for label, model, recorder_fn in candidates:
+        try:
+            with transaction.atomic():
+                payment = model.objects.select_for_update().get(payhero_reference=external_reference)
+
+                if payment.status != 'pending':
+                    return True, payment.status, label
+
+                payment.status = 'confirmed' if succeeded else 'failed'
+                if provider_reference:
+                    payment.notes = _append_note(payment.notes, f'Provider reference: {provider_reference}')
+                if result_desc:
+                    payment.notes = _append_note(payment.notes, f'Payhero: {result_desc}')
+                payment.save()
+
+            if succeeded and recorder:
+                recorder_fn(recorder, payment)
+            return True, payment.status, label
+        except model.DoesNotExist:
+            continue
+
+    return False, 'not_found', ''
 
 
 def home(request):
@@ -78,9 +211,38 @@ def dashboard(request):
             profile = ChamaProfile.objects.create(user=request.user, role='member')
             is_treasurer = False
 
+    requested_mode = request.session.get('dashboard_mode')
     if is_treasurer:
+        if requested_mode == DASHBOARD_MODE_MEMBER:
+            return member_dashboard(request)
+        request.session['dashboard_mode'] = DASHBOARD_MODE_TREASURER
         return treasurer_dashboard(request)
+
+    request.session['dashboard_mode'] = DASHBOARD_MODE_MEMBER
     return member_dashboard(request)
+
+
+@login_required
+def switch_dashboard_mode(request, mode):
+    normalized_mode = (mode or '').strip().lower()
+    if normalized_mode not in {DASHBOARD_MODE_MEMBER, DASHBOARD_MODE_TREASURER}:
+        messages.error(request, 'Invalid dashboard mode selected.')
+        return redirect('dashboard')
+
+    try:
+        profile = request.user.chama_profile
+    except ChamaProfile.DoesNotExist:
+        messages.error(request, 'Profile not found.')
+        return redirect('dashboard')
+
+    if normalized_mode == DASHBOARD_MODE_TREASURER and not profile.is_treasurer():
+        messages.error(request, 'You do not have access to treasurer mode.')
+        return redirect('dashboard')
+
+    request.session['dashboard_mode'] = normalized_mode
+    label = 'Treasurer' if normalized_mode == DASHBOARD_MODE_TREASURER else 'Member'
+    messages.success(request, f'Switched to {label} mode.')
+    return redirect('dashboard')
 
 
 def member_dashboard(request):
@@ -492,6 +654,50 @@ def payment_status(request):
     })
 
 
+@login_required
+@require_http_methods(["GET"])
+def payment_status_live(request):
+    user = request.user
+
+    contributions = user.contributions.all()
+    repayments = Repayment.objects.filter(loan__member=user)
+
+    pending_count = contributions.filter(status='pending').count() + repayments.filter(status='pending').count()
+    confirmed_count = contributions.filter(status='confirmed').count() + repayments.filter(status='confirmed').count()
+    failed_count = contributions.filter(status='failed').count() + repayments.filter(status='failed').count()
+
+    recent_contribution = (
+        contributions
+        .filter(status='confirmed', status_updated_at__isnull=False)
+        .order_by('-status_updated_at')
+        .first()
+    )
+    recent_repayment = (
+        repayments
+        .filter(status='confirmed', status_updated_at__isnull=False)
+        .order_by('-status_updated_at')
+        .first()
+    )
+
+    latest = None
+    if recent_contribution and recent_repayment:
+        latest = recent_contribution if recent_contribution.status_updated_at >= recent_repayment.status_updated_at else recent_repayment
+    else:
+        latest = recent_contribution or recent_repayment
+
+    latest_message = ''
+    if latest is not None:
+        tx_type = 'Contribution' if isinstance(latest, Contribution) else 'Repayment'
+        latest_message = f'{tx_type} of KSh {latest.amount} confirmed successfully.'
+
+    return JsonResponse({
+        'pending_count': pending_count,
+        'confirmed_count': confirmed_count,
+        'failed_count': failed_count,
+        'latest_message': latest_message,
+    })
+
+
 # ------------------------------------------------------------------ #
 #  Treasurer payment management — FIXED                                #
 # ------------------------------------------------------------------ #
@@ -851,64 +1057,42 @@ def payhero_webhook(request):
                 return JsonResponse({'error': 'Invalid signature'}, status=400)
 
         data = json.loads(payload)
-        response_data = data.get('response', {})
-        external_reference = response_data.get('ExternalReference')
-        status = response_data.get('Status')
-        result_code = response_data.get('ResultCode')
-        mpesa_receipt = response_data.get('MpesaReceiptNumber')
+        response_data = data.get('response') if isinstance(data.get('response'), dict) else data
 
-        logger.info(f"Payhero webhook | ref={external_reference} status={status} code={result_code}")
+        external_reference = response_data.get('ExternalReference') or response_data.get('external_reference')
+        status = response_data.get('Status') or response_data.get('status')
+        result_code = response_data.get('ResultCode') if response_data.get('ResultCode') is not None else response_data.get('result_code')
+        result_desc = response_data.get('ResultDesc') or response_data.get('message', '')
+        mpesa_receipt = response_data.get('MpesaReceiptNumber') or response_data.get('provider_reference', '')
 
-        payment_succeeded = (status == 'Success' and result_code == 0)
-        recorder = _get_stellar_recorder()
+        logger.info(
+            "Payhero webhook | ref=%s status=%s code=%s receipt=%s",
+            external_reference, status, result_code, mpesa_receipt
+        )
 
-        try:
-            contribution = Contribution.objects.get(payhero_reference=external_reference)
-            if payment_succeeded:
-                contribution.status = 'confirmed'
-                contribution.save()
-                if recorder:
-                    recorder.record_contribution(contribution)
-                return JsonResponse({'status': 'success', 'message': 'Contribution confirmed'})
-            else:
-                contribution.status = 'failed'
-                contribution.save()
-                return JsonResponse({'status': 'failed', 'message': 'Contribution failed'})
-        except Contribution.DoesNotExist:
-            pass
+        matched, local_status, payment_label = _update_payment_by_reference(
+            external_reference=external_reference,
+            status=status,
+            result_code=result_code,
+            result_desc=result_desc,
+            provider_reference=mpesa_receipt,
+        )
 
-        try:
-            repayment = Repayment.objects.get(payhero_reference=external_reference)
-            if payment_succeeded:
-                repayment.status = 'confirmed'
-                repayment.save()
-                if recorder:
-                    recorder.record_repayment(repayment)
-                return JsonResponse({'status': 'success', 'message': 'Repayment confirmed'})
-            else:
-                repayment.status = 'failed'
-                repayment.save()
-                return JsonResponse({'status': 'failed', 'message': 'Repayment failed'})
-        except Repayment.DoesNotExist:
-            pass
+        if not external_reference:
+            return JsonResponse({'error': 'ExternalReference missing'}, status=400)
 
-        try:
-            withdrawal = Withdrawal.objects.get(payhero_reference=external_reference)
-            if payment_succeeded:
-                withdrawal.status = 'confirmed'
-                withdrawal.save()
-                if recorder:
-                    recorder.record_withdrawal(withdrawal)
-                return JsonResponse({'status': 'success', 'message': 'Withdrawal confirmed'})
-            else:
-                withdrawal.status = 'failed'
-                withdrawal.save()
-                return JsonResponse({'status': 'failed', 'message': 'Withdrawal failed'})
-        except Withdrawal.DoesNotExist:
-            pass
+        if not matched and local_status == 'pending':
+            return JsonResponse({'status': 'accepted', 'message': 'Pending callback status'}, status=202)
 
-        logger.warning(f"Webhook reference not found: {external_reference}")
-        return JsonResponse({'status': 'error', 'message': 'Reference not found'})
+        if not matched:
+            logger.warning(f"Webhook reference not found: {external_reference}")
+            return JsonResponse({'status': 'error', 'message': 'Reference not found'}, status=404)
+
+        return JsonResponse({
+            'status': local_status,
+            'payment_type': payment_label,
+            'reference': external_reference,
+        })
 
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
@@ -918,108 +1102,376 @@ def payhero_webhook(request):
 
 
 def initiate_payhero_payment(request, payment_type, reference_id):
+    def _get_owned_payment():
+        if payment_type == 'contribution':
+            payment_obj = get_object_or_404(Contribution, id=reference_id, member=request.user)
+            payment_amount = float(payment_obj.amount)
+            payment_description = f"Contribution - {payment_obj.member.username}"
+            return payment_obj, payment_amount, payment_description
+        if payment_type == 'repayment':
+            payment_obj = get_object_or_404(Repayment, id=reference_id, loan__member=request.user)
+            payment_amount = float(payment_obj.amount)
+            payment_description = f"Loan Repayment - {payment_obj.loan.member.username}"
+            return payment_obj, payment_amount, payment_description
+        if payment_type == 'withdrawal':
+            payment_obj = get_object_or_404(Withdrawal, id=reference_id, member=request.user)
+            payment_amount = float(payment_obj.amount)
+            payment_description = f"Withdrawal - {payment_obj.member.username}"
+            return payment_obj, payment_amount, payment_description
+        return None, None, None
+
+    obj, amount, description = _get_owned_payment()
+    if not obj:
+        messages.error(request, 'Invalid payment type')
+        return redirect('dashboard')
+
     if request.method == 'POST':
-        phone_number = request.POST.get('phone_number')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        phone_number = _normalize_mpesa_phone(request.POST.get('phone_number', ''))
         if not phone_number:
+            if is_ajax:
+                return JsonResponse({'ok': False, 'message': 'Phone number is required for payment'}, status=400)
             messages.error(request, 'Phone number is required for payment')
-            return redirect('dashboard')
+            return redirect('initiate_payment', payment_type=payment_type, reference_id=reference_id)
 
         try:
-            if payment_type == 'contribution':
-                obj = get_object_or_404(Contribution, id=reference_id)
-                amount = float(obj.amount)
-                description = f"ChamaHub Contribution - {obj.member.username}"
-            elif payment_type == 'repayment':
-                obj = get_object_or_404(Repayment, id=reference_id)
-                amount = float(obj.amount)
-                description = f"ChamaHub Loan Repayment - {obj.loan.member.username}"
-            elif payment_type == 'withdrawal':
-                obj = get_object_or_404(Withdrawal, id=reference_id)
-                amount = float(obj.amount)
-                description = f"ChamaHub Withdrawal - {obj.member.username}"
-            else:
-                messages.error(request, 'Invalid payment type')
-                return redirect('dashboard')
+            auth_header = _build_payhero_auth_header()
+            if not auth_header:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'message': 'Payhero credentials are missing. Set username and API key in environment variables.'}, status=503)
+                messages.error(request, 'Payhero credentials are missing. Set username and API key in environment variables.')
+                return redirect('initiate_payment', payment_type=payment_type, reference_id=reference_id)
 
-            payhero_ref = f"CH_{payment_type.upper()}_{reference_id}_{int(timezone.now().timestamp())}"
-            headers = {
-                'Authorization': settings.PAYHERO_BASIC_AUTH_TOKEN,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            }
+            payhero_ref = (
+                f"CH_{payment_type.upper()}_{reference_id}_"
+                f"{int(timezone.now().timestamp())}_{secrets.token_hex(3).upper()}"
+            )
+            callback_url = getattr(settings, 'PAYHERO_CALLBACK_URL', '') or request.build_absolute_uri(reverse('payhero_webhook'))
+            if '127.0.0.1' in callback_url or 'localhost' in callback_url:
+                messages.warning(
+                    request,
+                    'Callback URL is local. For automatic callback updates, set PAYHERO_CALLBACK_URL to a public HTTPS URL.'
+                )
+
             payment_data = {
-                'amount': int(amount),
+                'amount': int(round(amount)),
                 'phone_number': phone_number,
                 'channel_id': int(settings.PAYHERO_CHANNEL_ID),
                 'provider': 'm-pesa',
                 'external_reference': payhero_ref,
                 'customer_name': request.user.get_full_name() or request.user.username,
-                'callback_url': request.build_absolute_uri('/webhook/payhero/'),
+                'callback_url': callback_url,
             }
 
+            response = None
+            last_request_error = None
+            for attempt in range(2):
+                try:
+                    response = requests.post(
+                        f'{settings.PAYHERO_BASE_URL}/api/v2/payments',
+                        headers=_payhero_headers(),
+                        json=payment_data,
+                        timeout=30,
+                    )
+                    # Retry once on transient upstream failures.
+                    if response.status_code >= 500 and attempt == 0:
+                        logger.warning(
+                            "Payhero initiate transient server error status=%s ref=%s; retrying once",
+                            response.status_code,
+                            payhero_ref,
+                        )
+                        continue
+                    break
+                except requests.exceptions.RequestException as exc:
+                    last_request_error = exc
+                    if attempt == 0:
+                        logger.warning(
+                            "Payhero initiate transient network error ref=%s; retrying once: %s",
+                            payhero_ref,
+                            exc,
+                        )
+                        continue
+                    raise
+
+            if response is None and last_request_error:
+                raise last_request_error
+
+            response_json = {}
             try:
-                response = requests.post(
-                    f'{settings.PAYHERO_BASE_URL}/api/v2/payments',
-                    headers=headers, json=payment_data, timeout=30
-                )
-                if response.status_code == 404 and "no rows in result set" in response.text:
-                    for channel_id in [911, 1, 2, 3, 100, 200, 300, 500, 1000]:
-                        payment_data['channel_id'] = channel_id
-                        try:
-                            test_response = requests.post(
-                                f'{settings.PAYHERO_BASE_URL}/api/v2/payments',
-                                headers=headers, json=payment_data, timeout=10
-                            )
-                            if test_response.status_code == 201:
-                                response = test_response
-                                messages.warning(request, f'Found working channel ID: {channel_id}. Update settings.py')
-                                break
-                        except requests.exceptions.RequestException:
-                            continue
-                    else:
-                        messages.error(request, 'No working channel ID found.')
-                        return redirect('dashboard')
+                response_json = response.json()
+            except Exception:
+                response_json = {}
 
-                if response.status_code == 201:
-                    obj.payhero_reference = payhero_ref
-                    obj.save()
-                    if response.json().get('success', False):
-                        messages.success(request, f'STK Push sent to {phone_number}. Ref: {payhero_ref}')
-                    else:
-                        messages.error(request, f'STK Push failed: {response.json().get("message", "Unknown error")}')
-                else:
-                    messages.error(request, f'Payhero error: {response.status_code}')
+            logger.info(
+                "Payhero initiate | status=%s ref=%s body=%s",
+                response.status_code,
+                payhero_ref,
+                response.text[:500],
+            )
 
-            except requests.exceptions.ConnectionError:
+            if response.status_code in {200, 201, 202} and _is_positive_initiation_response(response_json):
                 obj.payhero_reference = payhero_ref
                 obj.status = 'pending'
-                obj.save()
-                messages.warning(request, f'Payhero unavailable. Simulated STK Push. Ref: {payhero_ref}')
 
+                checkout_request_id = (
+                    response_json.get('CheckoutRequestID')
+                    or response_json.get('checkout_request_id')
+                )
+                if checkout_request_id:
+                    obj.checkout_request_id = checkout_request_id
+                    obj.notes = _append_note(obj.notes, f'CheckoutRequestID: {checkout_request_id}')
+
+                obj.save()
+
+                if hasattr(request.user, 'chama_profile'):
+                    request.user.chama_profile.phone_number = phone_number
+                    request.user.chama_profile.save(update_fields=['phone_number'])
+
+                messages.success(
+                    request,
+                    f'A prompt has been sent to {phone_number}. Please enter your M-Pesa PIN.'
+                )
+                if is_ajax:
+                    return JsonResponse({
+                        'ok': True,
+                        'status': 'pending',
+                        'reference': obj.payhero_reference,
+                        'message': f'A prompt has been sent to {phone_number}. Please enter your M-Pesa PIN.',
+                    })
+            else:
+                response_message = response_json.get('message', '') if isinstance(response_json, dict) else ''
+                if not response_message:
+                    response_message = response.text[:200]
+                if response.status_code >= 500 and not response_message:
+                    response_message = 'Payhero gateway temporary error. Please retry in a few seconds.'
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'message': response_message or 'Unable to initiate STK push'}, status=502)
+                messages.error(request, f'Payhero error ({response.status_code}): {response_message or "Unable to initiate STK push"}')
+
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"initiate_payhero_payment network error: {exc}")
+
+            # Recovery path: initiation might have succeeded server-side even if client timed out.
+            # Probe by the same external reference before telling the user to retry.
+            try:
+                status_response = requests.get(
+                    f'{settings.PAYHERO_BASE_URL}/api/v2/transaction-status',
+                    headers=_payhero_headers(),
+                    params={'reference': payhero_ref},
+                    timeout=20,
+                )
+
+                if status_response.status_code in {200, 201}:
+                    status_data = status_response.json()
+                    if str(status_data.get('error_code', '')).strip().upper() != 'NOT_FOUND':
+                        obj.payhero_reference = payhero_ref
+
+                        remote_status = status_data.get('Status') or status_data.get('status')
+                        remote_code = (
+                            status_data.get('ResultCode')
+                            if status_data.get('ResultCode') is not None
+                            else status_data.get('result_code')
+                        )
+                        remote_desc = status_data.get('ResultDesc') or status_data.get('message', '')
+                        provider_reference = status_data.get('MpesaReceiptNumber') or status_data.get('provider_reference', '')
+
+                        if remote_code is None and str(remote_status or '').strip().lower() == 'success':
+                            remote_code = 0
+
+                        matched, local_status, _ = _update_payment_by_reference(
+                            external_reference=payhero_ref,
+                            status=remote_status,
+                            result_code=remote_code,
+                            result_desc=remote_desc,
+                            provider_reference=provider_reference,
+                        )
+
+                        if matched:
+                            obj.refresh_from_db(fields=['status', 'payhero_reference'])
+                        else:
+                            obj.status = 'pending'
+                            obj.save(update_fields=['payhero_reference', 'status'])
+
+                        if obj.status == 'confirmed':
+                            if is_ajax:
+                                return JsonResponse({
+                                    'ok': True,
+                                    'status': 'confirmed',
+                                    'reference': obj.payhero_reference,
+                                    'message': 'Payment already received and confirmed.',
+                                })
+                            messages.success(request, 'Payment already received and confirmed.')
+                        else:
+                            if is_ajax:
+                                return JsonResponse({
+                                    'ok': True,
+                                    'status': 'pending',
+                                    'reference': obj.payhero_reference,
+                                    'message': 'Payhero responded slowly, but your payment request is active. Please complete the M-Pesa prompt on your phone.',
+                                })
+                            messages.warning(
+                                request,
+                                'Payhero responded slowly, but your payment request is active. Please complete the M-Pesa prompt on your phone.'
+                            )
+                        return redirect('initiate_payment', payment_type=payment_type, reference_id=reference_id)
+            except Exception as probe_exc:
+                logger.warning("Payhero timeout recovery probe failed for %s: %s", payhero_ref, probe_exc)
+
+            if is_ajax:
+                return JsonResponse({'ok': False, 'message': 'Could not reach Payhero. Please try again.'}, status=504)
+            messages.error(request, 'Could not reach Payhero. Please try again.')
         except Exception as e:
             logger.error(f"initiate_payhero_payment error: {e}")
+            if is_ajax:
+                return JsonResponse({'ok': False, 'message': f'Error initiating payment: {str(e)}'}, status=500)
             messages.error(request, f'Error initiating payment: {str(e)}')
 
-        return redirect('dashboard')
-
-    # GET
-    if payment_type == 'contribution':
-        obj = get_object_or_404(Contribution, id=reference_id)
-        description = f"Contribution - {obj.member.username}"
-    elif payment_type == 'repayment':
-        obj = get_object_or_404(Repayment, id=reference_id)
-        description = f"Loan Repayment - {obj.loan.member.username}"
-    elif payment_type == 'withdrawal':
-        obj = get_object_or_404(Withdrawal, id=reference_id)
-        description = f"Withdrawal - {obj.member.username}"
-    else:
-        messages.error(request, 'Invalid payment type')
-        return redirect('dashboard')
+        return redirect('initiate_payment', payment_type=payment_type, reference_id=reference_id)
 
     return render(request, 'core/phone_payment.html', {
         'payment_type': payment_type, 'reference_id': reference_id,
         'amount': obj.amount, 'description': description,
+        'active_reference': obj.payhero_reference or '',
+        'current_status': obj.status,
+        'current_blockchain_hash': obj.stellar_tx_hash or '',
     })
+
+
+@login_required
+@require_http_methods(["GET"])
+def poll_payhero_payment_status(request, payment_type, reference_id):
+    if payment_type == 'contribution':
+        obj = get_object_or_404(Contribution, id=reference_id, member=request.user)
+    elif payment_type == 'repayment':
+        obj = get_object_or_404(Repayment, id=reference_id, loan__member=request.user)
+    elif payment_type == 'withdrawal':
+        obj = get_object_or_404(Withdrawal, id=reference_id, member=request.user)
+    else:
+        return JsonResponse({'error': 'Invalid payment type'}, status=400)
+
+    if obj.status != 'pending':
+        return JsonResponse({
+            'status': obj.status,
+            'reference': obj.payhero_reference or '',
+            'payment_type': payment_type,
+            'amount': float(obj.amount),
+            'blockchain_tx_hash': obj.stellar_tx_hash or '',
+            'blockchain_recorded': bool(obj.stellar_tx_hash),
+            'message': 'Payment confirmed and blockchain record created.' if obj.status == 'confirmed' and obj.stellar_tx_hash else '',
+        })
+
+    if not obj.payhero_reference:
+        return JsonResponse({'status': 'pending', 'message': 'Reference not assigned yet'})
+
+    auth_header = _build_payhero_auth_header()
+    if not auth_header:
+        return JsonResponse({'status': 'pending', 'message': 'Payhero credentials not configured'})
+
+    # Use CheckoutRequestID for polling if available, otherwise fall back to our external reference
+    poll_reference = obj.checkout_request_id or obj.payhero_reference
+
+    try:
+        response = None
+        for attempt in range(2):
+            response = requests.get(
+                f'{settings.PAYHERO_BASE_URL}/api/v2/transaction-status',
+                headers=_payhero_headers(),
+                params={'reference': poll_reference},
+                timeout=20,
+            )
+            if response.status_code in {200, 201}:
+                break
+            if attempt == 0 and response.status_code >= 500:
+                logger.debug(
+                    "Payhero polling transient server error status=%s ref=%s; retrying once",
+                    response.status_code,
+                    obj.payhero_reference,
+                )
+                continue
+            # For non-200 responses, check if it's a normal NOT_FOUND (transaction not yet indexed by Payhero)
+            try:
+                error_data = response.json()
+                if str(error_data.get('error_code', '')).strip().upper() == 'NOT_FOUND':
+                    # Transaction not indexed yet - this is normal during the first few seconds
+                    logger.debug(
+                        "Payhero polling: transaction not found yet (normal indexing delay) ref=%s",
+                        obj.payhero_reference,
+                    )
+                    return JsonResponse({
+                        'status': 'pending',
+                        'reference': obj.payhero_reference,
+                        'message': 'Transaction not found yet on Payhero. Waiting for callback/status sync.',
+                    })
+            except (ValueError, TypeError):
+                pass
+            
+            # Unexpected non-200 response
+            logger.warning(
+                "Payhero polling unexpected status=%s ref=%s body=%s",
+                response.status_code,
+                obj.payhero_reference,
+                response.text[:200],
+            )
+            return JsonResponse({
+                'status': 'pending',
+                'reference': obj.payhero_reference,
+                'payment_type': payment_type,
+                'amount': float(obj.amount),
+                'message': 'Status service is temporarily unavailable. Still waiting for callback confirmation.',
+            })
+
+        if response is None or response.status_code not in {200, 201}:
+            return JsonResponse({
+                'status': 'pending',
+                'reference': obj.payhero_reference,
+                'payment_type': payment_type,
+                'amount': float(obj.amount),
+                'message': 'Status service is temporarily unavailable. Still waiting for callback confirmation.',
+            })
+
+        remote_data = response.json()
+
+        remote_status = remote_data.get('Status') or remote_data.get('status')
+        remote_code = remote_data.get('ResultCode') if remote_data.get('ResultCode') is not None else remote_data.get('result_code')
+        remote_desc = remote_data.get('ResultDesc') or remote_data.get('message', '')
+        provider_reference = remote_data.get('MpesaReceiptNumber') or remote_data.get('provider_reference', '')
+
+        # Some Payhero responses only provide "status": "Success" without result code.
+        if remote_code is None and str(remote_status or '').strip().lower() == 'success':
+            remote_code = 0
+
+        matched, _local_status, _ = _update_payment_by_reference(
+            external_reference=obj.payhero_reference,
+            status=remote_status,
+            result_code=remote_code,
+            result_desc=remote_desc,
+            provider_reference=provider_reference,
+        )
+
+        if matched:
+            obj.refresh_from_db(fields=['status', 'stellar_tx_hash'])
+
+        return JsonResponse({
+            'status': obj.status,
+            'reference': obj.payhero_reference,
+            'payment_type': payment_type,
+            'amount': float(obj.amount),
+            'remote_status': remote_status,
+            'provider_reference': provider_reference,
+            'blockchain_tx_hash': obj.stellar_tx_hash or '',
+            'blockchain_recorded': bool(obj.stellar_tx_hash),
+            'message': 'Payment confirmed and blockchain record created.' if obj.status == 'confirmed' and obj.stellar_tx_hash else '',
+        })
+
+    except requests.exceptions.RequestException as exc:
+        logger.warning("Payhero polling failed for %s: %s", obj.payhero_reference, exc)
+        return JsonResponse({
+            'status': 'pending',
+            'reference': obj.payhero_reference,
+            'payment_type': payment_type,
+            'amount': float(obj.amount),
+            'message': 'Polling encountered a network issue. Waiting for callback confirmation.',
+        })
 
 
 @login_required

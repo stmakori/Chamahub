@@ -18,7 +18,9 @@ urlpatterns = [
     # DASHBOARD & STATUS
     # ======================================================================
     path('dashboard/', views.dashboard, name='dashboard'),  # Routes to member or treasurer
+     path('dashboard/mode/<str:mode>/', views.switch_dashboard_mode, name='switch_dashboard_mode'),
     path('payment-status/', views.payment_status, name='payment_status'),  # Member's payment history
+     path('payment-status/live/', views.payment_status_live, name='payment_status_live'),
     
     # ======================================================================
     # MEMBER ACTIONS
@@ -48,6 +50,8 @@ urlpatterns = [
     # Payhero STK push initiation
     path('pay/<str:payment_type>/<int:reference_id>/', 
          views.initiate_payhero_payment, name='initiate_payment'),
+    path('pay/status/<str:payment_type>/<int:reference_id>/',
+         views.poll_payhero_payment_status, name='payment_poll_status'),
     
     # Payhero webhook (receives payment confirmations)
     path('webhook/payhero/', views.payhero_webhook, name='payhero_webhook'),

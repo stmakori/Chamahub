@@ -96,6 +96,11 @@
 </div>
 {% endif %}
 
+<div id="liveStatusAlert" class="alert alert-success border-0 d-none mb-4" role="alert">
+    <i class="fas fa-check-circle me-2"></i>
+    <span id="liveStatusText">Payment confirmed.</span>
+</div>
+
 <!-- Transaction Tabs -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3">
@@ -375,14 +380,53 @@
     </div>
 </div>
 
-{% if total_pending > 0 %}
 <script>
-    // This code ONLY appears in the HTML if there are pending payments
-    setTimeout(function() {
-        window.location.reload();
-    }, 30000);
+    const liveStatusUrl = '{% url "payment_status_live" %}';
+    const liveStatusAlert = document.getElementById('liveStatusAlert');
+    const liveStatusText = document.getElementById('liveStatusText');
+
+    let lastPending = Number('{{ total_pending|default:0 }}');
+    let lastConfirmed = Number('{{ confirmed_count|default:0 }}');
+    let lastFailed = Number('{{ failed_count|default:0 }}');
+
+    async function checkLiveStatus() {
+        try {
+            const response = await fetch(liveStatusUrl, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const changed = (
+                data.pending_count !== lastPending ||
+                data.confirmed_count !== lastConfirmed ||
+                data.failed_count !== lastFailed
+            );
+
+            if (changed) {
+                if (data.confirmed_count > lastConfirmed && liveStatusAlert && liveStatusText) {
+                    liveStatusText.textContent = data.latest_message || 'Payment confirmed successfully.';
+                    liveStatusAlert.classList.remove('d-none');
+                }
+
+                lastPending = data.pending_count;
+                lastConfirmed = data.confirmed_count;
+                lastFailed = data.failed_count;
+
+                setTimeout(() => window.location.reload(), 1200);
+            }
+        } catch (error) {
+            // Keep silent in UI; next poll retry handles temporary network errors.
+        }
+    }
+
+    setInterval(checkLiveStatus, 5000);
 </script>
-{% endif %}
 
 <!-- Custom styles -->
 <style>

@@ -83,3 +83,116 @@ INFO 2026-02-28 16:45:23,721 stellar 26353 125498801776320 🌐 Using Stellar TE
 INFO 2026-02-28 16:45:23,722 stellar 26353 125498801776320 🔐 Successfully decrypted Stellar secret key
 INFO 2026-02-28 16:45:23,723 stellar 26353 125498801776320 ✅ Stellar service initialized with account: GBR7BTOIF3...
 DEBUG 2026-02-28 16:45:27,354 views_blockchain 26353 125498801776320 Verified on Stellar: True
+INFO 2026-03-26 13:31:33,453 views 21996 126307370268352 Payhero initiate | status=201 ref=CH_CONTRIBUTION_42_1774521091_BC141C body={"success":true,"status":"QUEUED","reference":"833e-4bc8-a8b3-75f4cb6912302096153","CheckoutRequestID":"ws_CO_26032026133133350797684536","external_reference":"CH_CONTRIBUTION_42_1774521091_BC141C"}
+INFO 2026-03-26 13:31:46,661 views 21996 126307361875648 Payhero initiate | status=201 ref=CH_CONTRIBUTION_42_1774521104_9349BE body={"success":true,"status":"QUEUED","reference":"931a-47dd-ab9a-6e68ee6ea3221100567","CheckoutRequestID":"ws_CO_26032026133146288797684536","external_reference":"CH_CONTRIBUTION_42_1774521104_9349BE"}
+INFO 2026-03-26 14:25:27,207 views 24164 135126966064832 Payhero initiate | status=201 ref=CH_CONTRIBUTION_43_1774524325_7D3D58 body={"success":true,"status":"QUEUED","reference":"999b-4a8b-b270-5bed6316bf3e2194560","CheckoutRequestID":"ws_CO_26032026142526963797684536","external_reference":"CH_CONTRIBUTION_43_1774524325_7D3D58"}
+INFO 2026-03-26 14:25:43,024 views 24164 135126932494016 Payhero webhook | ref=CH_CONTRIBUTION_43_1774524325_7D3D58 status=Success code=0 receipt=UCQ48AYLZG
+INFO 2026-03-26 14:25:43,025 stellar 24164 135126932494016 🌐 Using Stellar TESTNET
+INFO 2026-03-26 14:25:43,028 stellar 24164 135126932494016 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-26 14:25:43,028 stellar 24164 135126932494016 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-26 14:25:43,034 stellar 24164 135126932494016 🌐 Using Stellar TESTNET
+INFO 2026-03-26 14:25:43,035 stellar 24164 135126932494016 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-26 14:25:43,035 stellar 24164 135126932494016 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-26 14:25:50,505 stellar 24164 135126932494016 ✅ Transaction recorded on Stellar: f0970eda0a20cdb2ee6cd197da83c5c2656e1bc64b027b3b4531429a5a51bd9a - CONTRIB:43:1
+INFO 2026-03-26 14:25:50,510 stellar_recorder 24164 135126932494016 ✅ contribution #43 recorded on Stellar: f0970eda0a20cdb2ee6cd197da83c5c2656e1bc64b027b3b4531429a5a51bd9a
+INFO 2026-03-26 14:25:50,796 stellar_recorder 24164 135126932494016 Stellar already recorded — skipping contribution #43
+INFO 2026-03-26 14:26:18,368 stellar 24164 135126957672128 🌐 Using Stellar TESTNET
+INFO 2026-03-26 14:26:18,369 stellar 24164 135126957672128 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-26 14:26:18,369 stellar 24164 135126957672128 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-26 14:26:20,297 stellar 24164 135126957672128 ✅ Retrieved account info for GBR7BTOIF3...
+DEBUG 2026-03-26 14:26:28,961 views_blockchain 24164 135126966064832 === BLOCKCHAIN TRANSACTION DETAIL VIEW ===
+DEBUG 2026-03-26 14:26:28,961 views_blockchain 24164 135126966064832 Transaction Hash: f0970eda0a20cdb2ee6cd197da83c5c2656e1bc64b027b3b4531429a5a51bd9a  |  User: korrie
+DEBUG 2026-03-26 14:26:28,964 views_blockchain 24164 135126966064832 Found transaction in database: id=18
+DEBUG 2026-03-26 14:26:28,965 views_blockchain 24164 135126966064832 Found source object: Contribution
+INFO 2026-03-26 14:26:28,965 stellar 24164 135126966064832 🌐 Using Stellar TESTNET
+INFO 2026-03-26 14:26:28,966 stellar 24164 135126966064832 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-26 14:26:28,966 stellar 24164 135126966064832 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-03-26 14:26:31,034 views_blockchain 24164 135126966064832 Verified on Stellar: True
+INFO 2026-03-26 14:41:51,111 views 24921 140401850697408 Payhero initiate | status=201 ref=CH_CONTRIBUTION_44_1774525309_4C9CDB body={"success":true,"status":"QUEUED","reference":"931a-47dd-ab9a-6e68ee6ea3221216656","CheckoutRequestID":"ws_CO_26032026144150186797684536","external_reference":"CH_CONTRIBUTION_44_1774525309_4C9CDB"}
+INFO 2026-03-26 14:42:05,756 views 24921 140401825519296 Payhero webhook | ref=CH_CONTRIBUTION_44_1774525309_4C9CDB status=Success code=0 receipt=UCQ48AYP1O
+INFO 2026-03-26 14:42:05,756 stellar 24921 140401825519296 🌐 Using Stellar TESTNET
+INFO 2026-03-26 14:42:06,259 stellar 24921 140401825519296 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-26 14:42:06,260 stellar 24921 140401825519296 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-26 14:42:06,265 stellar 24921 140401825519296 🌐 Using Stellar TESTNET
+INFO 2026-03-26 14:42:06,266 stellar 24921 140401825519296 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-26 14:42:06,266 stellar 24921 140401825519296 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-26 14:42:11,468 stellar 24921 140401825519296 ✅ Transaction recorded on Stellar: 0e5ad88484d9e7ff3f47a90fe7305e2453995344d6928a9f5c07a5b79c05f50d - CONTRIB:44:1
+INFO 2026-03-26 14:42:11,494 stellar_recorder 24921 140401825519296 ✅ contribution #44 recorded on Stellar: 0e5ad88484d9e7ff3f47a90fe7305e2453995344d6928a9f5c07a5b79c05f50d
+INFO 2026-03-26 14:42:11,637 stellar_recorder 24921 140401825519296 Stellar already recorded — skipping contribution #44
+ERROR 2026-03-26 14:47:48,861 views 26144 135326117910208 initiate_payhero_payment network error: HTTPSConnectionPool(host='backend.payhero.co.ke', port=443): Read timed out. (read timeout=30)
+INFO 2026-03-26 14:48:08,251 views 26144 135326108468928 Payhero initiate | status=502 ref=CH_CONTRIBUTION_45_1774525674_95144E body=
+WARNING 2026-03-26 14:50:48,447 views 26832 136882746812096 Payhero initiate transient network error ref=CH_CONTRIBUTION_45_1774525818_D504AA; retrying once: HTTPSConnectionPool(host='backend.payhero.co.ke', port=443): Read timed out. (read timeout=30)
+ERROR 2026-03-26 14:51:18,728 views 26832 136882746812096 initiate_payhero_payment network error: HTTPSConnectionPool(host='backend.payhero.co.ke', port=443): Read timed out. (read timeout=30)
+INFO 2026-03-27 12:00:24,960 views 28387 137377213314752 Payhero initiate | status=201 ref=CH_CONTRIBUTION_45_1774602022_B59691 body={"success":true,"status":"QUEUED","reference":"ee27-4bec-a0ec-075a0ced95ee1073357","CheckoutRequestID":"ws_CO_27032026120024447797684536","external_reference":"CH_CONTRIBUTION_45_1774602022_B59691"}
+INFO 2026-03-27 12:00:52,542 views 28387 137377196529344 Payhero webhook | ref=CH_CONTRIBUTION_45_1774602022_B59691 status=Success code=0 receipt=UCR48B28TC
+INFO 2026-03-27 12:00:52,542 stellar 28387 137377196529344 🌐 Using Stellar TESTNET
+INFO 2026-03-27 12:00:52,546 stellar 28387 137377196529344 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 12:00:52,546 stellar 28387 137377196529344 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 12:00:52,553 stellar 28387 137377196529344 🌐 Using Stellar TESTNET
+INFO 2026-03-27 12:00:52,554 stellar 28387 137377196529344 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 12:00:52,554 stellar 28387 137377196529344 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 12:00:55,518 stellar 28387 137377196529344 ✅ Transaction recorded on Stellar: a6abf71bda76786a20c36f0f492e4c9cde3582d8bc0890a5eb04f2234347ec38 - CONTRIB:45:4
+INFO 2026-03-27 12:00:55,528 stellar_recorder 28387 137377196529344 ✅ contribution #45 recorded on Stellar: a6abf71bda76786a20c36f0f492e4c9cde3582d8bc0890a5eb04f2234347ec38
+INFO 2026-03-27 12:00:55,662 stellar_recorder 28387 137377196529344 Stellar already recorded — skipping contribution #45
+INFO 2026-03-27 12:51:36,443 views 28387 137377295103680 Payhero initiate | status=201 ref=CH_CONTRIBUTION_46_1774605091_CC3A2E body={"success":true,"status":"QUEUED","reference":"783b-44e2-9c7d-663e7ea5d48a4315993","CheckoutRequestID":"ws_CO_27032026125136665797684536","external_reference":"CH_CONTRIBUTION_46_1774605091_CC3A2E"}
+INFO 2026-03-27 12:51:54,046 views 28387 137377204922048 Payhero webhook | ref=CH_CONTRIBUTION_46_1774605091_CC3A2E status=Success code=0 receipt=UCR48B2F7Y
+INFO 2026-03-27 12:51:54,049 stellar 28387 137377204922048 🌐 Using Stellar TESTNET
+INFO 2026-03-27 12:51:54,431 stellar 28387 137377204922048 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 12:51:54,432 stellar 28387 137377204922048 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 12:51:54,439 stellar 28387 137377204922048 🌐 Using Stellar TESTNET
+INFO 2026-03-27 12:51:54,440 stellar 28387 137377204922048 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 12:51:54,440 stellar 28387 137377204922048 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 12:52:00,135 stellar 28387 137377204922048 ✅ Transaction recorded on Stellar: 7dca18b022d3d86b88fcf854905921aed94e9bae629551e7da159e6d3a3ff108 - CONTRIB:46:1
+INFO 2026-03-27 12:52:00,197 stellar_recorder 28387 137377204922048 ✅ contribution #46 recorded on Stellar: 7dca18b022d3d86b88fcf854905921aed94e9bae629551e7da159e6d3a3ff108
+INFO 2026-03-27 12:52:00,313 stellar_recorder 28387 137377204922048 Stellar already recorded — skipping contribution #46
+INFO 2026-03-27 13:04:58,570 stellar 35455 125692935141056 🌐 Using Stellar TESTNET
+INFO 2026-03-27 13:04:58,625 stellar 35455 125692935141056 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 13:04:58,626 stellar 35455 125692935141056 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 13:05:00,516 stellar 35455 125692935141056 ✅ Retrieved account info for GBR7BTOIF3...
+INFO 2026-03-27 13:12:37,391 stellar 35455 125692935141056 🌐 Using Stellar TESTNET
+INFO 2026-03-27 13:12:37,426 stellar 35455 125692935141056 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 13:12:37,430 stellar 35455 125692935141056 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 13:12:39,098 stellar 35455 125692935141056 ✅ Retrieved account info for GBR7BTOIF3...
+INFO 2026-03-27 13:13:07,557 stellar 35455 125692935141056 🌐 Using Stellar TESTNET
+INFO 2026-03-27 13:13:07,558 stellar 35455 125692935141056 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-27 13:13:07,558 stellar 35455 125692935141056 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-27 13:13:08,872 stellar 35455 125692935141056 ✅ Retrieved account info for GBR7BTOIF3...
+INFO 2026-03-28 19:29:09,374 views 12167 132162462389952 Payhero initiate | status=201 ref=CH_CONTRIBUTION_47_1774715345_8EAE90 body={"success":true,"status":"QUEUED","reference":"d704-4250-88f0-8c1c2aeb25726673962","CheckoutRequestID":"ws_CO_28032026192908341797684536","external_reference":"CH_CONTRIBUTION_47_1774715345_8EAE90"}
+WARNING 2026-03-28 19:33:30,982 views 12167 132162470782656 Payhero initiate transient network error ref=CH_CONTRIBUTION_48_1774715565_4A554C; retrying once: HTTPSConnectionPool(host='backend.payhero.co.ke', port=443): Max retries exceeded with url: /api/v2/payments (Caused by ConnectTimeoutError(<HTTPSConnection(host='backend.payhero.co.ke', port=443) at 0x78337b278110>, 'Connection to backend.payhero.co.ke timed out. (connect timeout=30)'))
+ERROR 2026-03-28 19:33:51,011 views 12167 132162470782656 initiate_payhero_payment network error: HTTPSConnectionPool(host='backend.payhero.co.ke', port=443): Max retries exceeded with url: /api/v2/payments (Caused by NameResolutionError("HTTPSConnection(host='backend.payhero.co.ke', port=443): Failed to resolve 'backend.payhero.co.ke' ([Errno -3] Temporary failure in name resolution)"))
+WARNING 2026-03-28 19:34:11,034 views 12167 132162470782656 Payhero timeout recovery probe failed for CH_CONTRIBUTION_48_1774715565_4A554C: HTTPSConnectionPool(host='backend.payhero.co.ke', port=443): Max retries exceeded with url: /api/v2/transaction-status?reference=CH_CONTRIBUTION_48_1774715565_4A554C (Caused by NameResolutionError("HTTPSConnection(host='backend.payhero.co.ke', port=443): Failed to resolve 'backend.payhero.co.ke' ([Errno -3] Temporary failure in name resolution)"))
+INFO 2026-03-28 19:34:37,460 views 12167 132162462389952 Payhero initiate | status=201 ref=CH_CONTRIBUTION_48_1774715673_ED0F15 body={"success":true,"status":"QUEUED","reference":"021d-4cb7-a8cc-2b6a0cd8b8122264702","CheckoutRequestID":"ws_CO_28032026193437423718471224","external_reference":"CH_CONTRIBUTION_48_1774715673_ED0F15"}
+INFO 2026-03-28 19:36:20,384 views 12167 132162462389952 Payhero initiate | status=201 ref=CH_CONTRIBUTION_48_1774715778_AA1D77 body={"success":true,"status":"QUEUED","reference":"710a-4e00-8248-8c89a22e6b345298362","CheckoutRequestID":"ws_CO_28032026193619533797684536","external_reference":"CH_CONTRIBUTION_48_1774715778_AA1D77"}
+INFO 2026-03-28 19:38:18,217 views 12167 132161982166720 Payhero initiate | status=201 ref=CH_CONTRIBUTION_49_1774715896_962A4A body={"success":true,"status":"QUEUED","reference":"ae53-458e-afea-b8b837aebebe4520315","CheckoutRequestID":"ws_CO_28032026193817918797684536","external_reference":"CH_CONTRIBUTION_49_1774715896_962A4A"}
+WARNING 2026-03-28 19:45:28,560 views 15753 124021198808768 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774715896_962A4A body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+WARNING 2026-03-28 19:45:42,678 views 15753 124021190416064 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774715896_962A4A body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+INFO 2026-03-28 19:45:43,494 views 15753 124021182023360 Payhero initiate | status=201 ref=CH_CONTRIBUTION_49_1774716341_305CC2 body={"success":true,"status":"QUEUED","reference":"d704-4250-88f0-8c1c2aeb25726732276","CheckoutRequestID":"ws_CO_28032026194543399797684536","external_reference":"CH_CONTRIBUTION_49_1774716341_305CC2"}
+WARNING 2026-03-28 19:46:00,607 views 15753 124021173630656 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774716341_305CC2 body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+WARNING 2026-03-28 19:46:14,720 views 15753 124021165237952 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774716341_305CC2 body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+WARNING 2026-03-28 19:46:36,859 views 15753 124021190416064 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774716341_305CC2 body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+WARNING 2026-03-28 19:46:59,118 views 15753 124021156845248 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774716341_305CC2 body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+WARNING 2026-03-28 19:47:22,984 views 15753 124020670330560 Payhero polling non-success status=404 ref=CH_CONTRIBUTION_49_1774716341_305CC2 body={"error_code":"NOT_FOUND","error_message":"transaction with the given reference not found","status_code":404}
+DEBUG 2026-03-28 19:48:09,381 views 16415 137319768127168 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:54:06,183 views 17036 127626667620032 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:54:15,098 views 17036 127626658178752 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:54:24,050 views 17036 127626649786048 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:54:32,958 views 17036 127626641393344 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:54:40,761 views 17036 127626667620032 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:55:27,606 views 17036 127626658178752 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+DEBUG 2026-03-28 19:55:34,757 views 17036 127626649786048 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716341_305CC2
+INFO 2026-03-28 19:55:38,309 views 17036 127626421200576 Payhero initiate | status=201 ref=CH_CONTRIBUTION_49_1774716935_1493CD body={"success":true,"status":"QUEUED","reference":"4b8c-4d23-bddb-297c8886d275997629","CheckoutRequestID":"ws_CO_28032026195538394797684536","external_reference":"CH_CONTRIBUTION_49_1774716935_1493CD"}
+DEBUG 2026-03-28 19:55:53,445 views 17036 127626412807872 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716935_1493CD
+DEBUG 2026-03-28 19:56:00,597 views 17036 127626429593280 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716935_1493CD
+DEBUG 2026-03-28 19:56:07,472 views 17036 127626658178752 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_49_1774716935_1493CD
+INFO 2026-03-31 16:34:09,378 views 125316 123859743274688 Payhero initiate | status=201 ref=CH_CONTRIBUTION_50_1774964031_9DE441 body={"success":true,"status":"QUEUED","reference":"5578-4564-b12c-3b645cfec55a1628886","CheckoutRequestID":"ws_CO_31032026163352644797684536","external_reference":"CH_CONTRIBUTION_50_1774964031_9DE441"}
+INFO 2026-03-31 16:34:09,966 views 125316 123860280145600 Payhero webhook | ref=CH_CONTRIBUTION_50_1774964031_9DE441 status=Success code=0 receipt=UCV48BJLOG
+INFO 2026-03-31 16:34:09,966 stellar 125316 123860280145600 🌐 Using Stellar TESTNET
+INFO 2026-03-31 16:34:09,970 stellar 125316 123860280145600 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-31 16:34:09,971 stellar 125316 123860280145600 ✅ Stellar service initialized with account: GBR7BTOIF3...
+INFO 2026-03-31 16:34:09,976 stellar 125316 123860280145600 🌐 Using Stellar TESTNET
+INFO 2026-03-31 16:34:09,977 stellar 125316 123860280145600 🔐 Successfully decrypted Stellar secret key
+INFO 2026-03-31 16:34:09,978 stellar 125316 123860280145600 ✅ Stellar service initialized with account: GBR7BTOIF3...
+DEBUG 2026-03-31 16:34:11,591 views 125316 123860229789376 Payhero polling: transaction not found yet (normal indexing delay) ref=CH_CONTRIBUTION_50_1774964031_9DE441
+INFO 2026-03-31 16:34:14,393 stellar 125316 123860280145600 ✅ Transaction recorded on Stellar: 4bbafd118f3f4cf6a1280959064cc053ffdd699e86912342beb426ddfb33e6df - CONTRIB:50:1
+INFO 2026-03-31 16:34:14,398 stellar_recorder 125316 123860280145600 ✅ contribution #50 recorded on Stellar: 4bbafd118f3f4cf6a1280959064cc053ffdd699e86912342beb426ddfb33e6df
+INFO 2026-03-31 16:34:14,486 stellar_recorder 125316 123860280145600 Stellar already recorded — skipping contribution #50

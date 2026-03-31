@@ -106,6 +106,20 @@
 
             <ul class="navbar-nav">
                 {% if user.is_authenticated %}
+                {% if can_switch_profile %}
+                <li class="nav-item d-none d-lg-flex align-items-center me-2">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Dashboard mode switcher">
+                        <a class="btn {% if active_dashboard_mode == 'member' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                           href="{% url 'switch_dashboard_mode' 'member' %}">
+                            <i class="fas fa-user me-1"></i>Member
+                        </a>
+                        <a class="btn {% if active_dashboard_mode == 'treasurer' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                           href="{% url 'switch_dashboard_mode' 'treasurer' %}">
+                            <i class="fas fa-user-shield me-1"></i>Treasurer
+                        </a>
+                    </div>
+                </li>
+                {% endif %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -136,6 +150,27 @@
                                 <i class="fas fa-link me-2"></i>Blockchain Explorer
                             </a>
                         </li>
+                        {% if can_switch_profile %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <h6 class="dropdown-header">
+                                <i class="fas fa-repeat me-2"></i>
+                                Active View: {{ active_dashboard_label }}
+                            </h6>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if active_dashboard_mode == 'member' %}active{% endif %}"
+                               href="{% url 'switch_dashboard_mode' 'member' %}">
+                                <i class="fas fa-user me-2"></i>Switch to Member View
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if active_dashboard_mode == 'treasurer' %}active{% endif %}"
+                               href="{% url 'switch_dashboard_mode' 'treasurer' %}">
+                                <i class="fas fa-user-shield me-2"></i>Switch to Treasurer View
+                            </a>
+                        </li>
+                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <!-- SOLUTION 3: Proper POST logout form with CSRF token -->

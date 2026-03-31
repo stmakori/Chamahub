@@ -72,6 +72,7 @@ class Contribution(StellarMixin, models.Model):
     date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payhero_reference = models.CharField(max_length=100, blank=True, null=True)
+    checkout_request_id = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     status_updated_at = models.DateTimeField(blank=True, null=True)
 
@@ -168,6 +169,7 @@ class Repayment(StellarMixin, models.Model):
     date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payhero_reference = models.CharField(max_length=100, blank=True, null=True)
+    checkout_request_id = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     status_updated_at = models.DateTimeField(blank=True, null=True)
 
@@ -204,6 +206,7 @@ class Withdrawal(StellarMixin, models.Model):
     date = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payhero_reference = models.CharField(max_length=100, blank=True, null=True)
+    checkout_request_id = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     status_updated_at = models.DateTimeField(blank=True, null=True)
 
