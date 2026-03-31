@@ -27,13 +27,12 @@
 </head>
 <body>
 
-<!-- Loading Spinner Overlay -->
-<div class="spinner-overlay" id="loadingSpinner">
-    <div class="spinner-content">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-2 text-white">Processing your request…</p>
+<!-- Global Loading Overlay -->
+<div class="spinner-overlay" id="loadingSpinner" role="status" aria-live="polite" aria-hidden="true">
+    <div class="spinner-content" aria-label="Please wait while we process your request">
+        <div class="spinner-border" role="status" aria-hidden="true"></div>
+        <h6 class="mb-1 mt-3">Working on your request</h6>
+        <p class="mb-0">Please do not close this tab.</p>
     </div>
 </div>
 
@@ -446,19 +445,60 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const spinner = document.getElementById('loadingSpinner');
+    let spinnerTimeoutId = null;
+
+    function showSpinner() {
+        if (!spinner) return;
+        spinner.setAttribute('aria-hidden', 'false');
+        spinner.classList.add('show');
+    }
+
+    function hideSpinner() {
+        if (!spinner) return;
+        spinner.setAttribute('aria-hidden', 'true');
+        spinner.classList.remove('show');
+    }
 
     // ── Spinner logic ──────────────────────────────────────────
     // Show spinner on form submit UNLESS:
     //   (a) form has class "no-spinner"
     //   (b) form is inside a Bootstrap .modal element
     document.querySelectorAll('form').forEach(function (form) {
-        form.addEventListener('submit', function () {
+        form.addEventListener('submit', function (event) {
+            if (form.dataset.submitted === 'true') {
+                event.preventDefault();
+                return;
+            }
+
             const insideModal   = form.closest('.modal') !== null;
             const skipRequested = form.classList.contains('no-spinner');
 
             if (spinner && !insideModal && !skipRequested) {
-                spinner.classList.add('show');
+                if (spinnerTimeoutId) {
+                    clearTimeout(spinnerTimeoutId);
+                }
+                // Small delay avoids a flicker for ultra-fast responses.
+                spinnerTimeoutId = setTimeout(showSpinner, 120);
             }
+
+            // Prevent duplicate submits and surface immediate feedback on buttons.
+            form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (submitControl) {
+                if (submitControl.disabled) return;
+                submitControl.disabled = true;
+                submitControl.classList.add('is-loading');
+
+                if (submitControl.tagName === 'BUTTON') {
+                    const hasBootstrapSpinner = submitControl.querySelector('.spinner-border') !== null;
+                    if (!hasBootstrapSpinner) {
+                        if (!submitControl.dataset.originalHtml) {
+                            submitControl.dataset.originalHtml = submitControl.innerHTML;
+                        }
+                        submitControl.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Processing...';
+                    }
+                }
+            });
+
+            form.dataset.submitted = 'true';
         });
     });
 
@@ -484,10 +524,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Hide spinner if browser navigates back ─────────────────
     window.addEventListener('pageshow', function (e) {
-        if (e.persisted && spinner) {
-            spinner.classList.remove('show');
+        if (e.persisted) {
+            hideSpinner();
         }
     });
+
+    window.addEventListener('load', hideSpinner);
 
 });
 

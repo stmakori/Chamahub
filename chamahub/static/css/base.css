@@ -550,12 +550,12 @@ h6 { font-size: 1rem; }
 .spinner-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(17, 24, 39, 0.32);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 1035;      /* ← KEY FIX: was 9999, now below modal (1050) */
-    backdrop-filter: blur(3px);
+    pointer-events: all;
 }
 
 .spinner-overlay.show {
@@ -570,7 +570,13 @@ h6 { font-size: 1rem; }
 
 .spinner-content {
     text-align: center;
-    animation: bounceIn 0.5s;
+    animation: bounceIn 0.35s;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.4rem 1.7rem;
+    min-width: 260px;
+    box-shadow: 0 14px 40px rgba(17, 24, 39, 0.24);
+    border: 1px solid rgba(44, 62, 80, 0.15);
 }
 
 @keyframes bounceIn {
@@ -581,16 +587,27 @@ h6 { font-size: 1rem; }
 }
 
 .spinner-content .spinner-border {
-    width: 4rem;
-    height: 4rem;
+    width: 2.2rem;
+    height: 2.2rem;
     color: var(--primary-color);
-    border-width: 0.25rem;
+    border-width: 0.22rem;
+}
+
+.spinner-content h6 {
+    color: var(--gray-900);
+    font-weight: 700;
 }
 
 .spinner-content p {
     color: var(--gray-600);
     font-weight: 500;
-    margin-top: 1rem;
+    margin-top: 0.2rem;
+}
+
+button.is-loading,
+input[type="submit"].is-loading {
+    opacity: 0.9;
+    cursor: wait;
 }
 
 /* ===== Toast Notifications ===== */

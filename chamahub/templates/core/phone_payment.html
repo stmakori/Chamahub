@@ -2,6 +2,68 @@
 
 {% block title %}M-Pesa Payment - ChamaHub{% endblock %}
 
+{% block extra_css %}
+<style>
+    .payment-loading-state {
+        border: 0;
+        border-radius: 1rem;
+        background: linear-gradient(160deg, #0f766e 0%, #115e59 100%);
+        color: #fff;
+        box-shadow: 0 18px 36px rgba(15, 118, 110, 0.24);
+        overflow: hidden;
+    }
+
+    .payment-loading-state .card-body {
+        padding: 2rem 1.5rem;
+    }
+
+    .payment-loader-ring {
+        width: 68px;
+        height: 68px;
+        border: 4px solid rgba(255, 255, 255, 0.35);
+        border-top-color: #ffffff;
+        border-radius: 999px;
+        margin: 0 auto 1rem;
+        animation: payment-spin 1s linear infinite;
+    }
+
+    .payment-loader-dots {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-left: 0.35rem;
+        vertical-align: middle;
+    }
+
+    .payment-loader-dots span {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        animation: payment-dot-pulse 1.2s ease-in-out infinite;
+    }
+
+    .payment-loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .payment-loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    .payment-loading-meta {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.8rem;
+        padding: 0.75rem 0.9rem;
+    }
+
+    @keyframes payment-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes payment-dot-pulse {
+        0%, 80%, 100% { transform: scale(0.85); opacity: 0.5; }
+        40% { transform: scale(1.05); opacity: 1; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
@@ -51,6 +113,43 @@
                         <div class="d-grid gap-2 mt-3">
                             <a href="{% url 'dashboard' %}" class="btn btn-success">Back to Dashboard</a>
                             <a href="{% url 'payment_status' %}" class="btn btn-outline-success">View Payment History</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentFailedCard" class="card border-danger mb-4 {% if current_status != 'failed' %}d-none{% endif %}">
+                    <div class="card-body">
+                        <h5 class="text-danger fw-bold mb-3">
+                            <i class="fas fa-times-circle me-2"></i>Payment Failed
+                        </h5>
+                        <p class="mb-2" id="failedReason">
+                            The payment was cancelled or did not complete successfully.
+                        </p>
+                        <div class="alert alert-danger py-2 mb-0">
+                            <small>You can retry the payment or return to your dashboard.</small>
+                        </div>
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="button" class="btn btn-danger" id="retryPaymentBtn">Try Payment Again</button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentLoadingState" class="card payment-loading-state mb-4 {% if not active_reference or current_status != 'pending' %}d-none{% endif %}">
+                    <div class="card-body text-center">
+                        <div class="payment-loader-ring" aria-hidden="true"></div>
+                        <h5 class="fw-bold mb-2">
+                            Processing your payment
+                            <span class="payment-loader-dots" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </span>
+                        </h5>
+                        <p class="mb-3" id="paymentLoadingMessage">
+                            We sent an M-Pesa prompt to your phone. Enter your PIN to continue.
+                        </p>
+                        <div class="payment-loading-meta small">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Keep this page open while we verify payment and finalize your success page.
                         </div>
                     </div>
                 </div>
@@ -158,8 +257,13 @@ const globalSpinnerOverlay = document.getElementById('loadingSpinner');
 const paymentFormWrapper = document.getElementById('paymentFormWrapper');
 const paymentProgress = document.getElementById('paymentProgress');
 const paymentProgressText = document.getElementById('paymentProgressText');
+const paymentLoadingState = document.getElementById('paymentLoadingState');
+const paymentLoadingMessage = document.getElementById('paymentLoadingMessage');
 const paymentResult = document.getElementById('paymentResult');
 const paymentSuccessCard = document.getElementById('paymentSuccessCard');
+const paymentFailedCard = document.getElementById('paymentFailedCard');
+const failedReason = document.getElementById('failedReason');
+const retryPaymentBtn = document.getElementById('retryPaymentBtn');
 const paymentInstructions = document.getElementById('paymentInstructions');
 const successAmount = document.getElementById('successAmount');
 const successType = document.getElementById('successType');
@@ -270,9 +374,7 @@ if (paymentForm) {
             if (paymentProgress) {
                 paymentProgress.classList.remove('d-none');
             }
-            if (paymentFormWrapper) {
-                paymentFormWrapper.classList.add('d-none');
-            }
+            showWaitingState('STK push sent. Check your phone and enter your M-Pesa PIN.');
 
             pollAttempts = 0;
             consecutivePollErrors = 0;
@@ -296,7 +398,67 @@ function showResult(message, level) {
     paymentResult.classList.remove('d-none');
 }
 
+function normalizeProgressMessage(message) {
+    const text = String(message || '').trim();
+    if (!text) {
+        return 'Waiting for callback confirmation. Please complete the M-Pesa prompt on your phone.';
+    }
+
+    if (text.toLowerCase().includes('transaction not found')) {
+        return 'Confirming your payment request. Please complete the M-Pesa prompt on your phone.';
+    }
+
+    return text;
+}
+
+function showWaitingState(message) {
+    if (paymentFormWrapper) {
+        paymentFormWrapper.classList.add('d-none');
+    }
+    if (paymentInstructions) {
+        paymentInstructions.style.display = 'none';
+    }
+    if (paymentSuccessCard) {
+        paymentSuccessCard.classList.add('d-none');
+    }
+    if (paymentFailedCard) {
+        paymentFailedCard.classList.add('d-none');
+    }
+    if (paymentLoadingState) {
+        paymentLoadingState.classList.remove('d-none');
+    }
+
+    const waitingMessage = normalizeProgressMessage(message);
+    if (paymentLoadingMessage) {
+        paymentLoadingMessage.textContent = waitingMessage;
+    }
+    if (paymentProgressText) {
+        paymentProgressText.textContent = waitingMessage;
+    }
+}
+
+function showFormState() {
+    if (paymentLoadingState) {
+        paymentLoadingState.classList.add('d-none');
+    }
+    if (paymentFailedCard) {
+        paymentFailedCard.classList.add('d-none');
+    }
+    if (paymentFormWrapper) {
+        paymentFormWrapper.classList.remove('d-none');
+    }
+    if (paymentInstructions) {
+        paymentInstructions.style.display = '';
+    }
+}
+
 function showSuccessCard(data) {
+    if (paymentLoadingState) {
+        paymentLoadingState.classList.add('d-none');
+    }
+    if (paymentFailedCard) {
+        paymentFailedCard.classList.add('d-none');
+    }
     if (paymentFormWrapper) {
         paymentFormWrapper.classList.add('d-none');
     }
@@ -325,6 +487,27 @@ function showSuccessCard(data) {
         successSummary.textContent = data.blockchain_tx_hash
             ? 'Payment confirmed and blockchain record created.'
             : 'Payment confirmed. Blockchain record is syncing...';
+    }
+}
+
+function showFailedCard(message) {
+    if (paymentLoadingState) {
+        paymentLoadingState.classList.add('d-none');
+    }
+    if (paymentFormWrapper) {
+        paymentFormWrapper.classList.add('d-none');
+    }
+    if (paymentSuccessCard) {
+        paymentSuccessCard.classList.add('d-none');
+    }
+    if (paymentFailedCard) {
+        paymentFailedCard.classList.remove('d-none');
+    }
+    if (paymentInstructions) {
+        paymentInstructions.style.display = 'none';
+    }
+    if (failedReason) {
+        failedReason.textContent = message || 'The payment was cancelled or did not complete successfully.';
     }
 }
 
@@ -372,7 +555,8 @@ async function pollPaymentStatus() {
         if (data.status === 'failed') {
             stopPolling();
             hideGlobalOverlay();
-            showResult('Payment failed or was cancelled. You can retry now.', 'danger');
+            showResult('Payment failed or was cancelled.', 'danger');
+            showFailedCard(data.message || 'The payment was cancelled or did not complete successfully.');
             if (paymentProgressText) {
                 paymentProgressText.textContent = 'No successful payment received.';
             }
@@ -385,9 +569,7 @@ async function pollPaymentStatus() {
         pollAttempts += 1;
 
         const progressMessage = data.message || 'Waiting for callback confirmation. Please complete the M-Pesa prompt on your phone.';
-        if (paymentProgressText) {
-            paymentProgressText.textContent = progressMessage;
-        }
+        showWaitingState(progressMessage);
 
         const loweredMessage = String(progressMessage).toLowerCase();
         if (!response.ok || loweredMessage.includes('temporarily unavailable') || loweredMessage.includes('network issue')) {
@@ -399,6 +581,7 @@ async function pollPaymentStatus() {
         if (pollAttempts >= maxPollAttempts) {
             stopPolling();
             showResult('Still waiting for confirmation. Check your M-Pesa messages, then refresh this page.', 'warning');
+            showFormState();
             if (paymentProgressText) {
                 paymentProgressText.textContent = 'Polling timeout reached.';
             }
@@ -413,12 +596,11 @@ async function pollPaymentStatus() {
         pollAttempts += 1;
         consecutivePollErrors = Math.min(consecutivePollErrors + 1, 3);
 
-        if (paymentProgressText) {
-            paymentProgressText.textContent = 'Still checking status... if you already entered PIN, please wait a few seconds.';
-        }
+        showWaitingState('Still checking status... if you already entered PIN, please wait a few seconds.');
         if (pollAttempts >= maxPollAttempts) {
             stopPolling();
             showResult('Unable to verify payment right now. Please refresh and check your status.', 'warning');
+            showFormState();
             return;
         }
 
@@ -446,12 +628,33 @@ window.addEventListener('load', function() {
         return;
     }
 
+    if (currentStatus === 'failed') {
+        showFailedCard('This payment was not completed. You can try again.');
+        return;
+    }
+
     if (currentReference && currentStatus === 'pending') {
         if (paymentProgress) {
             paymentProgress.classList.remove('d-none');
         }
+        showWaitingState('Waiting for callback confirmation. Complete the M-Pesa prompt to proceed to your success page.');
         pollPaymentStatus();
     }
+});
+
+retryPaymentBtn?.addEventListener('click', function () {
+    showFormState();
+    showResult('Please enter your number and send a new STK push.', 'info');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+    }
+    if (submitSpinner) {
+        submitSpinner.classList.add('d-none');
+    }
+    if (submitIcon) {
+        submitIcon.classList.remove('d-none');
+    }
+    stopPolling();
 });
 </script>
 {% endblock %}
